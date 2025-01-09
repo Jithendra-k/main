@@ -35,7 +35,8 @@
             right: 0;
             left: 250px;
             height: 60px;
-            background-color: #fff;
+            background-color: #800000;
+            color: #fff;
             box-shadow: 0 2px 4px rgba(0,0,0,.1);
             z-index: 999;
             padding: 0 1rem;
@@ -115,6 +116,89 @@
         .bg-primary {
             background-color: #800000 !important;
         }
+        /* Add this to your existing styles */
+        @media (max-width: 768px) {
+            /* For smaller screens */
+            .top-navbar {
+                padding: 10px;
+            }
+
+            .content-area {
+                padding: 60px 10px 10px;
+            }
+
+            .card {
+                margin-bottom: 15px;
+            }
+
+            /* Handle button groups */
+            .btn-group {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn-group .btn {
+                margin: 2px 0;
+                width: 100%;
+            }
+
+            /* Make tables responsive */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Handle action buttons */
+            td .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.875rem;
+                margin: 2px;
+            }
+
+            /* Status badges */
+            .badge {
+                display: inline-block;
+                width: 100%;
+                margin: 2px 0;
+                text-align: center;
+            }
+
+            /* Form controls */
+            .form-control, .form-select {
+                margin-bottom: 10px;
+            }
+        }
+
+        /* Add these styles for better button alignment */
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 5px;
+        }
+
+        @media (max-width: 576px) {
+            .button-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-buttons .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -171,7 +255,7 @@
         <nav class="top-navbar d-flex justify-content-end align-items-center">
             <div class="d-flex align-items-center">
                 <span class="me-3">Welcome, Admin</span>
-                <a href="{% url 'logout' %}" class="btn btn-outline-danger">
+                <a href="{% url 'logout' %}" class="btn btn-outline-light">
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </a>
             </div>

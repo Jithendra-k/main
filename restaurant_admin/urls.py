@@ -11,6 +11,8 @@ urlpatterns = [
     path('order/<int:order_id>/', views.order_details, name='order_details'),
     path('order/<int:order_id>/update-status/', views.update_order_status, name='update_order_status'),
     path('order-stats/', views.order_stats, name='order_stats'),
+    path('order-stats/export-pdf/', views.export_order_stats_pdf, name='export_order_stats_pdf'),
+    path('store-chart-data/', views.store_chart_data, name='store_chart_data'),
 
     #Manage Reservations
     path('reservation/<int:reservation_id>/update-status/', views.update_reservation_status, name='update_reservation_status'),
@@ -46,6 +48,7 @@ urlpatterns = [
     path('transaction/<int:transaction_id>/', views.get_transaction_details, name='get_transaction_details'),
     path('transaction/<int:transaction_id>/refund/', views.process_refund, name='process_refund'),
     path('customer/<int:user_id>/transactions/', views.customer_transactions, name='customer_transactions'),
+    path('transactions/export-pdf/', views.export_transactions_pdf, name='export_transactions_pdf'),
 
     #Manage Settings
     path('settings/', views.settings, name='settings'),

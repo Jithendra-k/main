@@ -33,6 +33,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from datetime import datetime
+from .utils import generate_order_stats_pdf, generate_transaction_pdf
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -238,6 +239,10 @@ def order_stats(request):
         created_at__date__range=[start_date, end_date]
     ).order_by('-created_at')
 
+    total_taxes = sum(order.calculate_tax() for order in orders_list)
+    total_tips = sum(order.tip_amount for order in orders_list)
+
+
     # Calculate stats
     stats = orders_list.aggregate(
         total_sales=Sum('total_amount'),
@@ -246,6 +251,8 @@ def order_stats(request):
 
     total_sales = stats['total_sales'] or Decimal('0.00')
     order_count = stats['order_count']
+    gross_sales = total_sales
+    net_sales = gross_sales - total_taxes - total_tips
 
     # Calculate average order value
     avg_order_value = Decimal('0.00')
@@ -284,9 +291,62 @@ def order_stats(request):
         'start_date': start_date,
         'end_date': end_date,
         'dates': json.dumps(dates),
-        'counts': json.dumps(counts)
+        'counts': json.dumps(counts),
+        'gross_sales': gross_sales,
+        'total_taxes': total_taxes,
+        'total_tips': total_tips,
+        'net_sales': net_sales,
+        'total_orders': order_count,
     }
     return render(request, 'restaurant_admin/order_stats.html', context)
+
+
+@user_passes_test(is_staff_or_superuser)
+def export_order_stats_pdf(request):
+    start_date = request.GET.get('start_date') or request.session.get('stats_start_date')
+    end_date = request.GET.get('end_date') or request.session.get('stats_end_date')
+
+    if not (start_date and end_date):
+        messages.error(request, 'Please select a date range first')
+        return redirect('restaurant_admin:order_stats')
+
+    # Get orders for the date range
+    orders = Order.objects.filter(
+        created_at__date__range=[start_date, end_date]
+    ).order_by('-created_at')
+
+    # Calculate financial metrics
+    total_taxes = sum(order.calculate_tax() for order in orders)
+    total_tips = sum(order.tip_amount for order in orders)
+    gross_sales = orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    net_sales = gross_sales - total_taxes - total_tips
+
+    # Calculate order statistics
+    stats = {
+        'gross_sales': gross_sales,
+        'total_taxes': total_taxes,
+        'total_tips': total_tips,
+        'net_sales': net_sales,
+        'total_sales': gross_sales,  # Keep this for backward compatibility
+        'order_count': orders.count(),
+        'avg_order_value': gross_sales / (orders.count() or 1),
+        'completed_orders': orders.filter(status='completed').count(),
+        'in_progress_orders': orders.filter(status='in_progress').count()
+    }
+
+    # Generate and return PDF
+    return generate_order_stats_pdf(request, orders, stats, start_date, end_date)
+
+@user_passes_test(is_staff_or_superuser)
+def store_chart_data(request):
+    if request.method == 'POST':
+        try:
+            chart_data = json.loads(request.body)
+            request.session['chart_data'] = json.dumps(chart_data)
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 
 ###MANAGE RESERVATIONS
@@ -647,6 +707,43 @@ def send_refund_confirmation_email(transaction, refund_amount, reason):
 def customer_transactions(request, user_id):
     """View for showing transactions for a specific customer"""
     return manage_payments(request)
+
+
+# restaurant_admin/views.py
+
+@user_passes_test(is_staff_or_superuser)
+def export_transactions_pdf(request):
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if not (start_date and end_date):
+        messages.error(request, 'Please select a date range first')
+        return redirect('restaurant_admin:manage_payments')
+
+    # Get transactions for the date range
+    transactions = Transaction.objects.select_related('user').filter(
+        created_at__date__range=[start_date, end_date]
+    ).order_by('-created_at')
+
+    # Calculate payment method breakdown
+    payment_methods = {}
+    for trans in transactions:
+        method = trans.get_payment_method_display()
+        if method not in payment_methods:
+            payment_methods[method] = {'count': 0, 'amount': Decimal('0.00')}
+        payment_methods[method]['count'] += 1
+        payment_methods[method]['amount'] += trans.amount
+
+    # Calculate summary stats
+    stats = {
+        'total_transactions': transactions.count(),
+        'total_amount': transactions.aggregate(Sum('amount'))['amount__sum'] or 0,
+        'total_refunded': abs(
+            transactions.filter(transaction_type='refund').aggregate(Sum('amount'))['amount__sum'] or 0),
+        'payment_methods': payment_methods
+    }
+
+    return generate_transaction_pdf(transactions, stats, start_date, end_date)
 
 
 

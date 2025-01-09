@@ -34,7 +34,7 @@
         <div class="col-12">
             <!-- Date Range Filter -->
             <div class="date-range-form">
-                <form method="post" class="mb-4">
+                <form method="post" class="mb-4" id="statsForm">
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-md-4">
@@ -48,31 +48,83 @@
                                    value="{{ end_date|date:'Y-m-d' }}" required>
                         </div>
                         <div class="col-md-4 align-self-end">
-                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <div class="btn-group">
+                                <button type="submit" class="btn btn-primary">Filter</button>
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-success" onclick="exportPDF()">
+                                    <i class="bi bi-file-pdf"></i> Export PDF
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </form>
             </div>
-
-            <!-- Summary Stats -->
+            <!-- Replace the existing summary stats section -->
             <div class="stats-card">
-                <h4>Summary</h4>
+                <h4>Financial Summary</h4>
                 <div class="row">
-                    <div class="col-md-4">
-                        <h5>Total Sales</h5>
-                        <p class="h3">${{ total_sales|floatformat:2 }}</p>
+                    <div class="col-md-2">
+                        <div class="card text-white bg-secondary mb-3">
+                            <div class="card-body">
+                            <h5 class="card-title">Total Orders</h5>
+                            <p class="h3">{{ orders.paginator.count }}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <h5>Total Orders</h5>
-                        <p class="h3">{{ orders.paginator.count }}</p>
+                    <div class="col-md-2">
+                        <div class="card bg-primary text-white mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Gross Sales</h5>
+                                <p class="h3">${{ gross_sales|floatformat:2 }}</p>
+                            </div>
+                        </div>
                     </div>
-                    <!-- Replace the average order value section -->
-                    <div class="col-md-4">
-                        <h5>Average Order Value</h5>
-                        <p class="h3">${{ avg_order_value|floatformat:2 }}</p>
+                    <div class="col-md-2">
+                        <div class="card bg-info text-white mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Taxes Collected</h5>
+                                <p class="h3">${{ total_taxes|floatformat:2 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-success text-white mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Tips</h5>
+                                <p class="h3">${{ total_tips|floatformat:2 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-warning text-white mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Net Sales</h5>
+                                <p class="h3">${{ net_sales|floatformat:2 }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+{#            <!-- Summary Stats -->#}
+{#            <div class="stats-card">#}
+{#                <h4>Summary</h4>#}
+{#                <div class="row">#}
+{#                    <div class="col-md-4">#}
+{#                        <h5>Total Sales</h5>#}
+{#                        <p class="h3">${{ total_sales|floatformat:2 }}</p>#}
+{#                    </div>#}
+{#                    <div class="col-md-4">#}
+{#                        <h5>Total Orders</h5>#}
+{#                        <p class="h3">{{ orders.paginator.count }}</p>#}
+{#                    </div>#}
+{#                    <!-- Replace the average order value section -->#}
+{#                    <div class="col-md-4">#}
+{#                        <h5>Average Order Value</h5>#}
+{#                        <p class="h3">${{ avg_order_value|floatformat:2 }}</p>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
 
             <!-- Chart -->
             <div class="chart-container">
@@ -126,6 +178,7 @@
 {% endblock %}
 
 {% block extra_js %}
+    {{ block.super }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -169,6 +222,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
+    });
+});
+
+
+
+function exportPDF() {
+    const startDate = document.querySelector('input[name="start_date"]').value;
+    const endDate = document.querySelector('input[name="end_date"]').value;
+
+    if (!startDate || !endDate) {
+        alert('Please select a date range first');
+        return;
+    }
+
+    if (startDate > endDate) {
+        alert('Start date cannot be after end date');
+        return;
+    }
+
+    const url = `{% url 'restaurant_admin:export_order_stats_pdf' %}?start_date=${startDate}&end_date=${endDate}`;
+    window.location.href = url;
+}
+
+// Store chart data in session for PDF export
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = {
+        dates: {{ dates|safe }},
+        counts: {{ counts|safe }}
+    };
+    // Send chart data to backend
+    fetch('{% url "restaurant_admin:store_chart_data" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(chartData)
     });
 });
 </script>
