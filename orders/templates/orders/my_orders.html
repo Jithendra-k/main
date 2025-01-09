@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="my-orders-section section">
+    <div class="container">
+        <div class="section-title" data-aos="fade-up">
+            <h2>My Orders</h2>
+            <p><span>Track</span> <span class="description-title">Your Orders</span></p>
+        </div>
+
+        {% if orders %}
+            <div class="table-responsive">
+                <!-- In orders/templates/orders/my_orders.html, update the table structure -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Subtotal</th>
+                            <th>Tax</th>
+                            <th>Tip</th>
+                            <th>Rewards Used</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.created_at|date:"M d, Y, g:i A" }}</td>
+                            <td>
+                                {% for item in order.items.all %}
+                                    {{ item.quantity }}x {{ item.menu_item.name }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>${{ order.calculate_subtotal }}</td>
+                            <td>${{ order.calculate_tax }}</td>
+                            <td>{% if order.tip_amount %}${{ order.tip_amount }}{% else %}-{% endif %}</td>
+                            <td>{% if order.rewards_used %}${{ order.rewards_used }}{% else %}-{% endif %}</td>
+                            <td>${{ order.total_amount }}</td>
+                            <td>
+                                <span class="badge {% if order.status == 'completed' %}bg-success
+                                    {% elif order.status == 'cancelled' %}bg-danger
+                                    {% elif order.status == 'ready' %}bg-info
+                                    {% elif order.status == 'in_progress' %}bg-primary
+                                    {% else %}bg-warning{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-primary">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-receipt fs-1 text-muted"></i>
+                </div>
+                <h3>No Orders Found</h3>
+                <p>You haven't placed any orders yet.</p>
+                <a href="{% url 'menu:menu_list' %}" class="btn btn-primary mt-3">View Menu</a>
+            </div>
+        {% endif %}
+
+        <!-- Pagination -->
+        <!-- After orders table -->
+        {% include 'includes/pagination_style.html' with items=orders %}
+    </div>
+</section>
+
+    <!-- Modify Order Modal -->
+<div class="modal fade" id="modifyOrderModal" tabindex="-1" aria-labelledby="modifyOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modifyOrderModalLabel">Modify Order #<span id="modifyOrderId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>To modify your order, please call the restaurant at the number below:</p>
+                <h4 class="mt-3">+1 5589 55488 55</h4>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showModifyModal(orderId) {
+        document.getElementById('modifyOrderId').textContent = orderId;
+        var modifyModal = new bootstrap.Modal(document.getElementById('modifyOrderModal'));
+        modifyModal.show();
+    }
+</script>
+
+    {% block extra_css %}
+<style>
+    .section {
+        padding: 80px 0;
+    }
+    .badge {
+        font-size: 0.85em;
+        padding: 0.5em 0.75em;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        border-radius: 0.2rem;
+    }
+    .section-title {
+        margin-bottom: 40px;
+    }
+    .table-responsive {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    .badge {
+        font-weight: 500;
+    }
+
+
+</style>
+{% endblock %}
+{% endblock %}

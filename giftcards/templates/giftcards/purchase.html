@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Purchase Gift Card - Royal Nepal{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="text-center mb-4">Purchase a Gift Card</h2>
+
+                        <!-- Gift Card Preview -->
+                        <div class="gift-card-preview mb-4">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <img src="{% static 'img/logo.png' %}" alt="Restaurant Logo" class="mb-3" style="max-width: 150px;">
+                                    <h3>Royal Nepal Restaurant</h3>
+                                    <div class="amount-display mt-4">
+                                        <h2 class="text-primary">$<span id="selectedAmount">50</span></h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- In purchase.html -->
+                        <!-- Gift Card Form Section -->
+                        <form id="giftcardForm" class="needs-validation" novalidate>
+                            {% csrf_token %}
+
+                            <!-- Amount Selection -->
+                            <div class="mb-4">
+                                <label class="form-label">Select Amount *</label>
+                                <div class="btn-group w-100" role="group">
+                                    {% for value, label in AMOUNT_CHOICES %}
+                                    <input type="radio" class="btn-check" name="amount" id="amount{{ value }}"
+                                           value="{{ value }}" {% if value == 50 %}checked{% endif %} required>
+                                    <label class="btn btn-outline-primary" for="amount{{ value }}">{{ label }}</label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Recipient Details -->
+                            <div class="mb-3">
+                                <label class="form-label">Recipient's Name *</label>
+                                <input type="text" class="form-control" name="recipient_name" required>
+                                <div class="invalid-feedback">Please enter recipient's name</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Recipient's Email *</label>
+                                <input type="email" class="form-control" name="recipient_email" required>
+                                <div class="invalid-feedback">Please enter a valid email</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Personal Message (Optional)</label>
+                                <textarea class="form-control" name="message" rows="3"></textarea>
+                            </div>
+
+                            <!-- Payment Element Container -->
+                            <div id="payment-section" style="display: none;">
+                                <h4 class="mb-3">Payment Details</h4>
+                                <div id="payment-element" class="mb-3">
+                                    <!-- Stripe Elements will be mounted here -->
+                                </div>
+                                <div id="payment-message" class="alert alert-info" style="display: none;"></div>
+                            </div>
+
+                            <!-- Error Messages -->
+                            <div id="payment-error" class="alert alert-danger" style="display: none;"></div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" id="submit-button" class="btn btn-primary w-100">
+                                Continue to Payment
+                                <span id="spinner" class="spinner-border spinner-border-sm ms-2" style="display: none;"></span>
+                            </button>
+                        </form>
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+// Replace the entire script section in purchase.html
+// Initialize Stripe
+const stripe = Stripe('{{ stripe_public_key }}');
+let elements = null;
+let paymentElement = null;
+
+// Form submission handling
+const form = document.getElementById('giftcardForm');
+const submitButton = document.getElementById('submit-button');
+const spinner = document.getElementById('spinner');
+const paymentError = document.getElementById('payment-error');
+const paymentSection = document.getElementById('payment-section');
+const paymentMessage = document.getElementById('payment-message');
+
+// Create test card info section if it doesn't exist
+const createTestCardInfo = () => {
+    const existingInfo = document.getElementById('test-card-info');
+    if (!existingInfo) {
+        const testInfo = document.createElement('div');
+        testInfo.id = 'test-card-info';
+        testInfo.className = 'alert alert-info mt-3';
+        testInfo.innerHTML = `
+            <h5>Test Card Information:</h5>
+            <p>Use these test card numbers:</p>
+            <ul class="mb-0">
+                <li>Success: 4242 4242 4242 4242</li>
+                <li>Requires Authentication: 4000 0025 0000 3155</li>
+                <li>Decline: 4000 0000 0000 9995</li>
+            </ul>
+            <small>Use any future date for expiry and any 3 digits for CVC</small>
+        `;
+        paymentSection.appendChild(testInfo);
+    }
+};
+
+form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    submitButton.disabled = true;
+    if (spinner) spinner.style.display = 'inline-block';
+    if (paymentError) paymentError.style.display = 'none';
+
+    try {
+        if (!form.dataset.paymentIntentCreated) {
+            // First submission - create PaymentIntent
+            const formData = new FormData(form);
+
+            const response = await fetch("{% url 'giftcards:purchase' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Store the gift card ID
+            form.dataset.giftCardId = data.gift_card_id;
+            form.dataset.paymentIntentCreated = 'true';
+
+            // Initialize Stripe Elements
+            elements = stripe.elements({
+                clientSecret: data.client_secret,
+                appearance: {
+                    theme: 'stripe',
+                    variables: {
+                        colorPrimary: '#ce1212',
+                    }
+                }
+            });
+
+            // Create and mount the payment element
+            paymentElement = elements.create('payment');
+            paymentElement.mount('#payment-element');
+
+            // Show payment section and create test card info
+            if (paymentSection) paymentSection.style.display = 'block';
+            createTestCardInfo();
+            submitButton.textContent = 'Complete Purchase';
+
+            if (paymentMessage) {
+                paymentMessage.textContent = 'Use test card number: 4242 4242 4242 4242';
+                paymentMessage.style.display = 'block';
+            }
+
+        } else {
+            // Second submission - process payment
+            const {error} = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    return_url: `${window.location.origin}/giftcards/confirm-purchase/${form.dataset.giftCardId}/`,
+                }
+            });
+
+            if (error) {
+                throw error;
+            }
+            // Payment successful - redirect will be handled by Stripe
+        }
+    } catch (error) {
+        if (paymentError) {
+            paymentError.textContent = error.message;
+            paymentError.style.display = 'block';
+        }
+    } finally {
+        submitButton.disabled = false;
+        if (spinner) spinner.style.display = 'none';
+    }
+});
+
+// Handle prefilling form for pending gift cards
+document.addEventListener('DOMContentLoaded', function() {
+    const pendingGiftcard = {{ pending_giftcard|default:'null'|safe }};
+
+    if (pendingGiftcard) {
+        // Pre-fill form fields
+        const amount = parseFloat(pendingGiftcard.amount);
+        const amountRadio = document.querySelector(`input[name="amount"][value="${amount}"]`);
+        if (amountRadio) {
+            amountRadio.checked = true;
+            const selectedAmount = document.getElementById('selectedAmount');
+            if (selectedAmount) selectedAmount.textContent = amount;
+        }
+
+        const recipientName = document.querySelector('input[name="recipient_name"]');
+        const recipientEmail = document.querySelector('input[name="recipient_email"]');
+        const messageTextarea = document.querySelector('textarea[name="message"]');
+
+        if (recipientName) recipientName.value = pendingGiftcard.recipient_name;
+        if (recipientEmail) recipientEmail.value = pendingGiftcard.recipient_email;
+        if (messageTextarea && pendingGiftcard.message) {
+            messageTextarea.value = pendingGiftcard.message;
+        }
+
+        // Add hidden field for card_id
+        const cardIdInput = document.createElement('input');
+        cardIdInput.type = 'hidden';
+        cardIdInput.name = 'card_id';
+        cardIdInput.value = pendingGiftcard.card_id;
+        form.appendChild(cardIdInput);
+
+        // Update button text
+        submitButton.textContent = 'Complete Payment';
+    }
+});
+// Update amount display when selection changes
+document.querySelectorAll('input[name="amount"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.getElementById('selectedAmount').textContent = this.value;
+    });
+});
+
+</script>
+{% endblock %}
+
+{% endblock %}

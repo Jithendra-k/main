@@ -1,0 +1,515 @@
+{% extends 'restaurant_admin/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Transaction History</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Transactions</h6>
+                    <h3 class="mb-0">{{ total_transactions }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Amount</h6>
+                    <h3 class="mb-0">${{ total_amount|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Refunds</h6>
+                    <h3 class="mb-0">${{ total_refunded|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Transactions</h5>
+                <div>
+                    <button class="btn btn-secondary" onclick="exportTransactions()">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="transactionsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Payment Method</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>#{{ transaction.id }}</td>
+                            <td>{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                {% if transaction.user %}
+                                    <a href="{% url 'restaurant_admin:customer_detail' transaction.user.id %}">
+                                        {{ transaction.user.get_full_name|default:transaction.user.username }}
+                                    </a>
+                                {% else %}
+                                    Guest
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if transaction.transaction_type == 'order' %}bg-primary
+                                    {% elif transaction.transaction_type == 'refund' %}bg-warning
+                                    {% else %}bg-info{% endif %}">
+                                    {{ transaction.get_transaction_type_display }}
+                                </span>
+                            </td>
+                            <td>${{ transaction.amount|absolute_value }}</td>
+                            <td>
+                                <span class="badge {% if transaction.status == 'completed' %}bg-success
+                                    {% elif transaction.status == 'refunded' %}bg-warning
+                                    {% elif transaction.status == 'failed' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ transaction.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ transaction.get_payment_method_display }}</td>
+                            <!-- Update the buttons in your transactions table -->
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary view-transaction"
+                                            onclick="viewTransactionDetails('{{ transaction.id }}')"
+                                            title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    {% if transaction.can_be_refunded %}
+                                    <button class="btn btn-sm btn-warning refund-transaction"
+                                            onclick="initiateRefund('{{ transaction.id }}')"
+                                            title="Process Refund">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- At the bottom of your table in each template -->
+            {% if page_obj.paginator.num_pages > 1 %}
+                {% include 'includes/pagination_style.html' with items=page_obj %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Transaction Details Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transaction Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="transactionDetails">
+                    <!-- Details will be populated here -->
+                </div>
+
+                <!-- Refund History -->
+                <div id="refundHistory" class="mt-4" style="display: none;">
+                    <h6>Refund History</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Reason</th>
+                                    <th>Processed By</th>
+                                </tr>
+                            </thead>
+                            <tbody id="refundHistoryBody">
+                                <!-- Refund history will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Refund Modal -->
+<div class="modal fade" id="refundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Process Refund</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Transaction Details Section -->
+                <div class="alert alert-info mb-4">
+                    <h6 class="alert-heading">Transaction Details</h6>
+                    <div id="refundTransactionDetails"></div>
+                </div>
+
+                <!-- Refund Form -->
+                <form id="refundForm" onsubmit="return false;">
+                    {% csrf_token %}
+                    <input type="hidden" id="refundTransactionId">
+
+                    <!-- Alert Messages -->
+                    <div class="alert alert-danger" id="refundError" style="display: none;"></div>
+                    <div class="alert alert-success" id="refundSuccess" style="display: none;"></div>
+
+                    <!-- Amount Input -->
+                    <div class="mb-3">
+                        <label class="form-label">Refund Amount ($)</label>
+                        <input type="number" class="form-control" id="refundAmount"
+                               step="0.01" min="0.01" required>
+                        <small class="form-text text-muted">
+                            Maximum refund amount: $<span id="maxRefundAmount">0.00</span>
+                        </small>
+                    </div>
+
+                    <!-- Reason Input -->
+                    <div class="mb-3">
+                        <label class="form-label">Reason for Refund</label>
+                        <textarea class="form-control" id="refundReason"
+                                rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="processRefund()">
+                    Process Refund
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.btn-group .btn {
+    margin-right: 2px;
+}
+
+.btn-group .btn:hover {
+    opacity: 0.9;
+}
+
+.btn-group .btn:active {
+    transform: scale(0.95);
+}
+
+.view-transaction, .refund-transaction {
+    cursor: pointer;
+}
+
+    #refundModal .alert-info {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+    }
+
+    #refundModal .modal-content {
+        border-radius: 0.5rem;
+    }
+
+    #refundModal .btn-warning {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #000;
+    }
+
+    #refundModal .btn-warning:hover {
+        background-color: #ffca2c;
+        border-color: #ffc720;
+    }
+
+    #refundModal .form-control:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
+</style>
+{% block extra_js %}
+<script>
+// Initialize modals
+let transactionModal = null;
+let refundModal = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    transactionModal = new bootstrap.Modal(document.getElementById('transactionModal'));
+    refundModal = new bootstrap.Modal(document.getElementById('refundModal'));
+
+    // Initialize refund amount validation
+    const refundAmountInput = document.getElementById('refundAmount');
+    refundAmountInput.addEventListener('input', validateRefundAmount);
+});
+
+// Add this to your existing JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Display total transactions
+    const totalTransactions = {{ total_transactions }};
+    document.querySelector('.total-transactions').textContent = totalTransactions;
+
+    // Initialize event listeners for buttons
+    initializeButtons();
+});
+
+function initializeButtons() {
+    // View Transaction Details
+    document.querySelectorAll('.view-transaction').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const transactionId = this.getAttribute('data-transaction-id');
+            viewTransactionDetails(transactionId);
+        });
+    });
+
+    // Initialize Export button
+    document.getElementById('exportButton').addEventListener('click', function(e) {
+        e.preventDefault();
+        exportTransactions();
+    });
+}
+
+async function viewTransactionDetails(transactionId) {
+    try {
+        const response = await fetch(`/restaurant-admin/transaction/${transactionId}/`);
+        if (!response.ok) throw new Error('Failed to fetch transaction details');
+
+        const data = await response.json();
+
+        // Populate modal with transaction details
+        const modalBody = document.querySelector('#transactionModal .modal-body');
+        modalBody.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Transaction ID:</strong> #${data.id}</p>
+                    <p><strong>Date:</strong> ${data.created_at}</p>
+                    <p><strong>Customer:</strong> ${data.customer_name}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Amount:</strong> $${data.amount}</p>
+                    <p><strong>Status:</strong> ${data.status}</p>
+                    <p><strong>Payment Method:</strong> ${data.payment_method}</p>
+                </div>
+            </div>
+        `;
+
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById('transactionModal'));
+        modal.show();
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error loading transaction details');
+    }
+}
+
+async function initiateRefund(transactionId) {
+    try {
+        const response = await fetch(`/restaurant-admin/transaction/${transactionId}/`);
+        if (!response.ok) throw new Error('Failed to fetch transaction details');
+
+        const data = await response.json();
+
+        // Populate refund modal with transaction details
+        const detailsHtml = `
+            <p><strong>Transaction ID:</strong> #${data.id}</p>
+            <p><strong>Customer:</strong> ${data.customer_name}</p>
+            <p><strong>Original Amount:</strong> $${data.amount}</p>
+            <p><strong>Previously Refunded:</strong> $${data.refunded_amount || '0.00'}</p>
+        `;
+        document.getElementById('refundTransactionDetails').innerHTML = detailsHtml;
+
+        // Set up refund form
+        document.getElementById('refundTransactionId').value = data.id;
+        const maxRefund = data.amount - (data.refunded_amount || 0);
+        document.getElementById('maxRefundAmount').textContent = maxRefund.toFixed(2);
+        document.getElementById('refundAmount').max = maxRefund;
+
+        // Reset form and messages
+        document.getElementById('refundForm').reset();
+        document.getElementById('refundError').style.display = 'none';
+        document.getElementById('refundSuccess').style.display = 'none';
+
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById('refundModal'));
+        modal.show();
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error loading transaction details');
+    }
+}
+
+// Update the processRefund function
+async function processRefund() {
+    const transactionId = document.getElementById('refundTransactionId').value;
+    const amount = document.getElementById('refundAmount').value;
+    const reason = document.getElementById('refundReason').value;
+
+    if (!amount || !reason) {
+        showRefundError('Please fill in all fields');
+        return;
+    }
+
+    const submitButton = document.querySelector('#refundModal button.btn-warning');
+    const originalButtonText = submitButton.innerHTML;
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+
+    try {
+        const response = await fetch(`/restaurant-admin/transaction/${transactionId}/refund/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                amount: amount,
+                reason: reason
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showRefundSuccess('Refund processed successfully');
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(document.getElementById('refundModal')).hide();
+                window.location.reload();
+            }, 1500);
+        } else {
+            throw new Error(data.error || 'Error processing refund');
+        }
+    } catch (error) {
+        showRefundError(error.message);
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonText;
+    }
+}
+
+function exportTransactions() {
+    const table = document.getElementById('transactionsTable');
+    const rows = table.getElementsByTagName('tr');
+    const csvContent = [];
+
+    // Add headers
+    const headers = [];
+    const headerCells = rows[0].getElementsByTagName('th');
+    for (let i = 0; i < headerCells.length - 1; i++) { // Skip Actions column
+        headers.push(headerCells[i].textContent);
+    }
+    csvContent.push(headers.join(','));
+
+    // Add data rows
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const cells = row.getElementsByTagName('td');
+        const rowData = [];
+        for (let j = 0; j < cells.length - 1; j++) { // Skip Actions column
+            rowData.push(cells[j].textContent.trim());
+        }
+        csvContent.push(rowData.join(','));
+    }
+
+    // Create and download CSV file
+    const csvString = csvContent.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'transactions.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+function validateRefundAmount(e) {
+    const input = e.target;
+    const maxAmount = parseFloat(input.max);
+    const amount = parseFloat(input.value);
+
+    if (amount <= 0) {
+        input.setCustomValidity('Amount must be greater than 0');
+    } else if (amount > maxAmount) {
+        input.setCustomValidity(`Amount cannot exceed ${maxAmount}`);
+    } else {
+        input.setCustomValidity('');
+    }
+}
+
+
+function showRefundError(message) {
+    const errorDiv = document.getElementById('refundError');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+    document.getElementById('refundSuccess').style.display = 'none';
+}
+
+function showRefundSuccess(message) {
+    const successDiv = document.getElementById('refundSuccess');
+    successDiv.textContent = message;
+    successDiv.style.display = 'block';
+    document.getElementById('refundError').style.display = 'none';
+}
+
+// Date range validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const startDate = document.querySelector('input[name="start_date"]').value;
+    const endDate = document.querySelector('input[name="end_date"]').value;
+
+    if (startDate && endDate && startDate > endDate) {
+        e.preventDefault();
+        alert('Start date cannot be after end date');
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

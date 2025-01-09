@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Restaurant Admin{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        /* Fixed sidebar styling */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: #800000;
+            color: #fff;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        /* Main content styling */
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+            background-color: #f4f6f9;
+        }
+
+        /* Top navbar styling */
+        .top-navbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 250px;
+            height: 60px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            z-index: 999;
+            padding: 0 1rem;
+        }
+
+        /* Content area styling */
+        .content-area {
+            padding: 80px 20px 20px;
+        }
+
+        /* Logo and restaurant name styling */
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo img {
+            max-width: 100px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar .restaurant-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 0;
+        }
+
+        /* Navigation styling */
+        .nav-item {
+            margin: 5px 15px;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        /* Card styling */
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border: none;
+        }
+
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid #eee;
+            padding: 1rem;
+        }
+
+        /* Utility classes */
+        .text-primary {
+            color: #800000 !important;
+        }
+
+        .bg-primary {
+            background-color: #800000 !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="logo">
+            <img src="{% static 'img/logo.png' %}" alt="Restaurant Logo">
+            <div class="restaurant-name">Royal Nepal</div>
+        </div>
+        <ul class="nav flex-column mt-4">
+            <li class="nav-item">
+                <a class="nav-link {% if request.path == '/restaurant-admin/' %}active{% endif %}" 
+                   href="{% url 'restaurant_admin:dashboard' %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'payments' in request.path %}active{% endif %}" 
+                   href="{% url 'restaurant_admin:manage_payments' %}">
+                    <i class="bi bi-credit-card"></i> Manage Payments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'menu' in request.path %}active{% endif %}" 
+                   href="{% url 'restaurant_admin:food_menu' %}">
+                    <i class="bi bi-list-ul"></i> Manage Menu
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'customers' in request.path %}active{% endif %}" 
+                   href="{% url 'restaurant_admin:customer_management' %}">
+                    <i class="bi bi-people"></i> View Customers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'giftcards' in request.path %}active{% endif %}" 
+                   href="{% url 'restaurant_admin:manage_giftcards' %}">
+                    <i class="bi bi-gift"></i> Manage Gift Cards
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'settings' in request.path %}active{% endif %}" 
+                   href="{% url 'restaurant_admin:settings' %}">
+                    <i class="bi bi-gear"></i> Settings
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Navbar -->
+        <nav class="top-navbar d-flex justify-content-end align-items-center">
+            <div class="d-flex align-items-center">
+                <span class="me-3">Welcome, Admin</span>
+                <a href="{% url 'logout' %}" class="btn btn-outline-danger">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </nav>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

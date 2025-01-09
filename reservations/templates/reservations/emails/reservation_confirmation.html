@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reservation Confirmation - Royal Nepal Restaurant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            color: #ce1212;
+        }
+        .details {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Reservation Confirmed!</h1>
+        </div>
+
+        <p>Dear {{ reservation.name }},</p>
+
+        <p>Your reservation at Royal Nepal Restaurant has been confirmed.</p>
+
+        <div class="details">
+            <h3>Reservation Details:</h3>
+            <p><strong>Date:</strong> {{ reservation.date|date:"F j, Y" }}</p>
+            <p><strong>Time:</strong> {{ reservation.time|time:"g:i A" }}</p>
+            <p><strong>Number of Guests:</strong> {{ reservation.guests }}</p>
+            {% if reservation.special_request %}
+            <p><strong>Special Requests:</strong> {{ reservation.special_request }}</p>
+            {% endif %}
+        </div>
+
+        <p><strong>Restaurant Information:</strong><br>
+        Royal Nepal Restaurant<br>
+        [Address]<br>
+        Phone: [Phone Number]</p>
+
+        <p>If you need to modify or cancel your reservation, please do so at least 3 hours before your scheduled time.</p>
+
+        <p>Thank you for choosing Royal Nepal Restaurant!</p>
+    </div>
+</body>
+</html>

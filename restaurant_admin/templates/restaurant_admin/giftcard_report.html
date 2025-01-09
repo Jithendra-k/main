@@ -1,0 +1,219 @@
+{% extends 'restaurant_admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Report Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Gift Card Report</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control" name="start_date"
+                           value="{{ request.GET.start_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date"
+                           value="{{ request.GET.end_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="status">
+                        <option value="">All</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="redeemed" {% if request.GET.status == 'redeemed' %}selected{% endif %}>Redeemed</option>
+                        <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Expired</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Report Summary -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total Cards</h6>
+                    <h2 class="card-title mb-0">{{ stats.total_cards }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total Value Issued</h6>
+                    <h2 class="card-title mb-0">${{ stats.total_value }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total Value Redeemed</h6>
+                    <h2 class="card-title mb-0">${{ stats.redeemed_value }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Chart -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Gift Card Sales Trend</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="salesChart" height="100"></canvas>
+        </div>
+    </div>
+
+    <!-- Detailed Report Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Detailed Report</h5>
+            <button class="btn btn-success" onclick="exportToExcel()">
+                <i class="bi bi-file-excel me-2"></i>Export to Excel
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table" id="reportTable">
+                    <thead>
+                        <tr>
+                            <th>Card ID</th>
+                            <th>Purchase Date</th>
+                            <th>Purchaser</th>
+                            <th>Recipient</th>
+                            <th>Amount</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                            <th>Last Used</th>
+                            <th>Expiry Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for card in cards %}
+                        <tr>
+                            <td>{{ card.card_id }}</td>
+                            <td>{{ card.purchase_date|date:"Y-m-d H:i" }}</td>
+                            <td>{{ card.purchaser.get_full_name }}</td>
+                            <td>{{ card.recipient_name }}</td>
+                            <td>${{ card.amount }}</td>
+                            <td>${{ card.balance }}</td>
+                            <td>
+                                <span class="badge {% if card.status == 'active' %}bg-success
+                                    {% elif card.status == 'redeemed' %}bg-secondary
+                                    {% elif card.status == 'expired' %}bg-danger
+                                    {% else %}bg-warning{% endif %}">
+                                    {{ card.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if card.redeemed_date %}
+                                    {{ card.redeemed_date|date:"Y-m-d H:i" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ card.expiry_date|date:"Y-m-d" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#reportTable').DataTable({
+        pageLength: 25,
+        dom: 'Bfrtip',
+        order: [[1, 'desc']], // Sort by purchase date
+        buttons: [
+            'copy', 'excel', 'pdf'
+        ]
+    });
+
+    // Initialize sales chart
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_dates|safe }},
+            datasets: [{
+                label: 'Gift Card Sales',
+                data: {{ chart_values|safe }},
+                borderColor: '#ce1212',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Amount ($)'
+                    }
+                }
+            }
+        }
+    });
+});
+
+// Excel Export Function
+function exportToExcel() {
+    const table = document.getElementById('reportTable');
+    const wb = XLSX.utils.table_to_book(table, {sheet: "Gift Cards Report"});
+    const wbout = XLSX.write(wb, {bookType: 'xlsx', type: 'binary'});
+
+    function s2ab(s) {
+        const buf = new ArrayBuffer(s.length);
+        const view = new Uint8Array(buf);
+        for (let i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+        return buf;
+    }
+
+    const blob = new Blob([s2ab(wbout)], {type: "application/octet-stream"});
+    const fileName = `gift_cards_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+    saveAs(blob, fileName);
+}
+
+// Date Range Validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const startDate = document.querySelector('input[name="start_date"]').value;
+    const endDate = document.querySelector('input[name="end_date"]').value;
+
+    if (startDate && endDate && startDate > endDate) {
+        e.preventDefault();
+        alert('Start date cannot be after end date');
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

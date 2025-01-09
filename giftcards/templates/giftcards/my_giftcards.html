@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="row">
+            <!-- Purchased Gift Cards -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Gift Cards You've Purchased</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if purchased_cards %}
+                            {% for card in purchased_cards %}
+                                <div class="gift-card-item mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="card-title">{{ card.recipient_name }}</h6>
+                                                    <div class="text-muted">
+                                                        <small>Card ID: {{ card.card_id }}</small><br>
+                                                        <small>Amount: ${{ card.amount }}</small><br>
+                                                        <small>Purchased: {{ card.purchase_date|date:"M d, Y" }}</small>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex flex-column align-items-end">
+                                                    <span class="badge {% if card.status == 'active' %}bg-success
+                                                        {% elif card.status == 'redeemed' %}bg-secondary
+                                                        {% else %}bg-danger{% endif %}">
+                                                        {{ card.get_status_display }}
+                                                    </span>
+
+                                                    {% if card.status == 'pending' %}
+                                                    <a href="{% url 'giftcards:complete_payment' card.card_id %}"
+                                                       class="btn btn-primary btn-sm mt-2">
+                                                        Complete Payment
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                        {% else %}
+                            <p class="text-center text-muted">You haven't purchased any gift cards yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Received Gift Cards -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Gift Cards You've Received</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if received_cards %}
+                            {% for card in received_cards %}
+                                <div class="gift-card-item mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <h6 class="card-title">${{ card.balance }}</h6>
+                                                <span class="badge {% if card.status == 'active' %}bg-success
+                                                    {% elif card.status == 'redeemed' %}bg-secondary
+                                                    {% else %}bg-danger{% endif %}">
+                                                    {{ card.get_status_display }}
+                                                </span>
+                                            </div>
+                                            <p class="card-text">
+                                                <small class="text-muted">Card ID: {{ card.card_id }}</small><br>
+                                                <small class="text-muted">From: {{ card.purchaser.get_full_name }}</small><br>
+                                                <small class="text-muted">Expires: {{ card.expiry_date|date:"M d, Y" }}</small>
+                                            </p>
+                                            {% if card.status == 'active' %}
+                                                <button class="btn btn-sm btn-primary"
+                                                        onclick="showRedeemModal('{{ card.card_id }}', {{ card.balance }})">
+                                                    Redeem
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-center text-muted">You haven't received any gift cards yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Redeem Modal -->
+<div class="modal fade" id="redeemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Redeem Gift Card</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'giftcards:redeem_giftcard' %}">
+                {% csrf_token %}
+
+                <div class="modal-body">
+                    <input type="hidden" name="card_id" id="redeem_card_id">
+                    <div class="mb-3">
+                        <label class="form-label">Available Balance</label>
+                        <input type="text" class="form-control" id="available_balance" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount to Redeem</label>
+                        <input type="number" class="form-control" name="amount" id="redeem_amount"
+                               step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Redeem</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function showRedeemModal(cardId, balance) {
+    document.getElementById('redeem_card_id').value = cardId;
+    document.getElementById('available_balance').value = `$${balance}`;
+    document.getElementById('redeem_amount').max = balance;
+
+    const modal = new bootstrap.Modal(document.getElementById('redeemModal'));
+    modal.show();
+}
+
+// Add form submission handler
+document.querySelector('form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const amount = document.getElementById('redeem_amount').value;
+    const cardId = document.getElementById('redeem_card_id').value;
+
+    if (!amount || amount <= 0 || amount > parseFloat(this.elements['redeem_amount'].max)) {
+        alert('Please enter a valid amount');
+        return;
+    }
+
+    this.submit();
+});
+</script>
+{% endblock %}
+{% endblock %}

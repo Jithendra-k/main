@@ -1,0 +1,40 @@
+<!-- templates/restaurant_admin/emails/refund_customer_email.html -->
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #ce1212; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .details { background-color: #f8f9fa; padding: 15px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Refund Processed</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{ transaction.user.get_full_name }},</p>
+
+            <p>We have processed a refund for your recent transaction.</p>
+
+            <div class="details">
+                <p><strong>Refund Amount:</strong> ${{ refund_amount }}</p>
+                <p><strong>Transaction ID:</strong> #{{ transaction.id }}</p>
+                <p><strong>Reason:</strong> {{ reason }}</p>
+                <p><strong>Date:</strong> {{ transaction.refunded_at|date:"F j, Y" }}</p>
+            </div>
+
+            <p>The refund will be processed to your original payment method. Please allow 3-5 business days for the refund to appear in your account.</p>
+
+            <p>If you have any questions, please don't hesitate to contact us.</p>
+
+            <p>Best regards,<br>
+            {{ restaurant_name }} Team</p>
+        </div>
+    </div>
+</body>
+</html>

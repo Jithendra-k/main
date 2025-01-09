@@ -1,0 +1,79 @@
+{
+  "categories": [
+    {
+      "name": "Appetizers",
+      "slug": "appetizers",
+      "display_order": 1,
+      "items": [
+        {
+          "name": "Chicken Momo",
+          "slug": "chicken-momo",
+          "description": "Steamed dumplings filled with minced chicken, herbs, and Nepali spices",
+          "price": 8.95,
+          "image": "menu-item-1.png",
+          "spice_level": "medium"
+        }
+      ]
+    },
+    {
+      "name": "Main Course",
+      "slug": "main-course",
+      "display_order": 2,
+      "items": [
+        {
+          "name": "Dal Bhat Tarkari",
+          "slug": "dal-bhat-tarkari",
+          "description": "Traditional Nepali thali with lentils, rice, and seasonal vegetables",
+          "price": 14.95,
+          "image": "menu-item-2.png",
+          "spice_level": "medium"
+        }
+      ]
+    },
+    {
+      "name": "Sides",
+      "slug": "sides",
+      "display_order": 3,
+      "items": [
+        {
+          "name": "Aloo Saag",
+          "slug": "aloo-saag",
+          "description": "Potatoes and spinach cooked with traditional Nepali spices",
+          "price": 6.95,
+          "image": "menu-item-3.png",
+          "spice_level": "mild"
+        }
+      ]
+    },
+    {
+      "name": "Desserts",
+      "slug": "desserts",
+      "display_order": 4,
+      "items": [
+        {
+          "name": "Kheer",
+          "slug": "kheer",
+          "description": "Traditional rice pudding with cardamom, nuts, and raisins",
+          "price": 5.95,
+          "image": "menu-item-4.png",
+          "spice_level": "mild"
+        }
+      ]
+    },
+    {
+      "name": "Specials",
+      "slug": "specials",
+      "display_order": 5,
+      "items": [
+        {
+          "name": "Thakali Set",
+          "slug": "thakali-set",
+          "description": "Complete traditional Thakali cuisine set with premium ingredients",
+          "price": 24.95,
+          "image": "menu-item-5.png",
+          "spice_level": "spicy"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+<!-- orders/templates/orders/order_section.html -->
+{% load static %}
+
+<section id="order" class="order section">
+    <div class="container section-title" data-aos="fade-up">
+        <h2>Order Online</h2>
+        <p><span>Enjoy</span> <span class="description-title">Home Delivery</span></p>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                {% if cart_items %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in cart_items %}
+                                <tr>
+                                    <td>{{ item.menu_item.name }}</td>
+                                    <td>
+                                        <form action="{% url 'orders:cart_update' item.menu_item.id %}" method="post" class="d-flex align-items-center">
+                                            {% csrf_token %}
+                                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control" style="width: 80px">
+                                            <button type="submit" class="btn btn-sm btn-primary ms-2">Update</button>
+                                        </form>
+                                    </td>
+                                    <td>${{ item.menu_item.price }}</td>
+                                    <td>${{ item.total_price }}</td>
+                                    <td>
+                                        <a href="{% url 'orders:cart_remove' item.menu_item.id %}" class="btn btn-sm btn-danger">Remove</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td colspan="2"><strong>${{ cart_total }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div class="text-end mt-3">
+                            <a href="{% url 'orders:checkout' %}" class="btn btn-primary">Proceed to Checkout</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <h3>Your cart is empty</h3>
+                        <p>Browse our menu to add items to your cart</p>
+                        <a href="{% url 'menu:menu_list' %}" class="btn btn-primary mt-3">View Menu</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>

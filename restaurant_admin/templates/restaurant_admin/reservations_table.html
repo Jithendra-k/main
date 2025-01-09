@@ -1,0 +1,43 @@
+{% for reservation in reservations %}
+    {% if show_all or reservation.arrival_status == 'not_arrived' %}
+    <tr class="{% if reservation.arrival_status != 'not_arrived' %}text-muted{% endif %}">
+        <td>{{ reservation.time|time:"H:i" }}</td>
+{#        <td>#{{ reservation.id }}</td>#}
+        <td>{{ reservation.name }}</td>
+        <td>{{ reservation.guests }}</td>
+        <td>
+            <span class="badge {% if reservation.status == 'pending' %}bg-warning
+                {% elif reservation.status == 'confirmed' %}bg-success
+                {% elif reservation.status == 'rejected' %}bg-danger
+                {% else %}bg-secondary{% endif %}">
+                {{ reservation.get_status_display }}
+            </span>
+        </td>
+        <td>
+            {% if reservation.status == 'confirmed' %}
+            <select class="form-select form-select-sm arrival-status-select"
+                    data-reservation-id="{{ reservation.id }}"
+                    {% if not show_all and reservation.arrival_status != 'not_arrived' %}disabled{% endif %}>
+                <option value="not_arrived" {% if reservation.arrival_status == 'not_arrived' %}selected{% endif %}>
+                    Not yet Arrived
+                </option>
+                <option value="seated" {% if reservation.arrival_status == 'seated' %}selected{% endif %}>
+                    Seated
+                </option>
+                <option value="no_show" {% if reservation.arrival_status == 'no_show' %}selected{% endif %}>
+                    No Show
+                </option>
+            </select>
+            {% endif %}
+        </td>
+        <td>
+            <div class="btn-group">
+                <a href="{% url 'restaurant_admin:reservation_details' reservation.id %}"
+                   class="btn btn-sm btn-primary">
+                    <i class="bi bi-eye"></i> View
+                </a>
+            </div>
+        </td>
+    </tr>
+    {% endif %}
+{% endfor %}

@@ -1,0 +1,113 @@
+{% extends 'restaurant_admin/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Customer Management</h5>
+                <form class="d-flex" method="get">
+                    <div class="input-group">
+                        <input type="text"
+                               class="form-control"
+                               placeholder="Search by name, email, or phone"
+                               name="search"
+                               value="{{ search_query }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        {% if search_query %}
+                            <a href="{% url 'restaurant_admin:customer_management' %}"
+                               class="btn btn-secondary">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Total Orders</th>
+                            <th>Total Spent</th>
+                            <th>Loyalty Points</th>
+                            <th>Rewards Balance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ customer.user.get_full_name|default:customer.user.username }}</td>
+                            <td>{{ customer.user.email }}</td>
+                            <td>{{ customer.phone_number|default:"-" }}</td>
+                            <td>{{ customer.total_orders }}</td>
+                            <td>${{ customer.total_spent|default:"0.00" }}</td>
+                            <td>{{ customer.loyalty_points }}</td>
+                            <td>${{ customer.rewards_balance }}</td>
+                            <td>
+                                <a href="{% url 'restaurant_admin:customer_detail' customer.user.id %}"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- At the bottom of your table in each template -->
+            {% if page_obj.paginator.num_pages > 1 %}
+                {% include 'includes/pagination_style.html' with items=page_obj %}
+            {% endif %}
+        </div>
+    </div>
+{% if search_query %}
+<div class="alert alert-info mb-4">
+    Showing results for: "{{ search_query }}"
+    <span class="badge bg-secondary">{{ page_obj.paginator.count }} results</span>
+</div>
+{% endif %}
+</div>
+    <style>
+.search-form .input-group {
+    width: 300px;
+}
+
+.search-form .form-control:focus {
+    box-shadow: none;
+    border-color: #ce1212;
+}
+
+.search-form .btn-primary {
+    background-color: #ce1212;
+    border-color: #ce1212;
+}
+
+.search-form .btn-primary:hover {
+    background-color: #b01010;
+    border-color: #b01010;
+}
+
+.search-results-info {
+    font-size: 0.9rem;
+}
+
+.search-results-info .badge {
+    font-size: 0.8rem;
+    padding: 0.35em 0.65em;
+}
+
+@media (max-width: 576px) {
+    .search-form .input-group {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

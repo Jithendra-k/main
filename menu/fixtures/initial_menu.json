@@ -1,0 +1,122 @@
+[
+  {
+    "model": "menu.category",
+    "fields": {
+      "name": "Appetizers",
+      "slug": "appetizers",
+      "description": "Start your meal with our delicious appetizers",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "menu.category",
+    "fields": {
+      "name": "Main Course",
+      "slug": "main-course",
+      "description": "Authentic Nepali main dishes",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "menu.category",
+    "fields": {
+      "name": "Specials",
+      "slug": "specials",
+      "description": "Chef's special recommendations",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "menu.category",
+    "fields": {
+      "name": "Sides",
+      "slug": "sides",
+      "description": "Perfect accompaniments to your meal",
+      "is_active": true,
+      "display_order": 4
+    }
+  },
+  {
+    "model": "menu.category",
+    "fields": {
+      "name": "Desserts",
+      "slug": "desserts",
+      "description": "Sweet endings to your meal",
+      "is_active": true,
+      "display_order": 5
+    }
+  },
+  {
+    "model": "menu.menuitem",
+    "fields": {
+      "category": 1,
+      "name": "Chicken Momo",
+      "slug": "chicken-momo",
+      "description": "Steamed dumplings filled with minced chicken, herbs, and Nepali spices",
+      "price": "8.95",
+      "image": "menu_items/menu-item-1.png",
+      "is_available": true,
+      "is_featured": true,
+      "spice_level": "medium"
+    }
+  },
+  {
+    "model": "menu.menuitem",
+    "fields": {
+      "category": 2,
+      "name": "Dal Bhat Tarkari",
+      "slug": "dal-bhat-tarkari",
+      "description": "Traditional Nepali thali with lentils, rice, and seasonal vegetables",
+      "price": "14.95",
+      "image": "menu_items/menu-item-2.png",
+      "is_available": true,
+      "is_featured": true,
+      "spice_level": "medium"
+    }
+  },
+  {
+    "model": "menu.menuitem",
+    "fields": {
+      "category": 3,
+      "name": "Thakali Set",
+      "slug": "thakali-set",
+      "description": "Complete traditional Thakali cuisine set with premium ingredients",
+      "price": "24.95",
+      "image": "menu_items/menu-item-5.png",
+      "is_available": true,
+      "is_featured": true,
+      "spice_level": "spicy"
+    }
+  },
+  {
+    "model": "menu.menuitem",
+    "fields": {
+      "category": 4,
+      "name": "Aloo Saag",
+      "slug": "aloo-saag",
+      "description": "Potatoes and spinach cooked with traditional Nepali spices",
+      "price": "6.95",
+      "image": "menu_items/menu-item-3.png",
+      "is_available": true,
+      "is_featured": false,
+      "spice_level": "mild"
+    }
+  },
+  {
+    "model": "menu.menuitem",
+    "fields": {
+      "category": 5,
+      "name": "Kheer",
+      "slug": "kheer",
+      "description": "Traditional rice pudding with cardamom, nuts, and raisins",
+      "price": "5.95",
+      "image": "menu_items/menu-item-4.png",
+      "is_available": true,
+      "is_featured": false,
+      "spice_level": "mild"
+    }
+  }
+]

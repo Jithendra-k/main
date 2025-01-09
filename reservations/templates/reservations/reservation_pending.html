@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <i class="bi bi-clock-history text-warning" style="font-size: 4rem;"></i>
+                        </div>
+
+                        <h2 class="mb-4">Reservation Request Submitted!</h2>
+
+                        <div class="alert alert-warning mb-4">
+                            <p>Your reservation request is pending approval. We will notify you via email once it's confirmed.</p>
+                        </div>
+
+                        <div class="reservation-details card bg-light mb-4">
+                            <div class="card-body">
+                                <h4 class="card-title text-primary mb-4">Reservation Details</h4>
+                                <div class="row">
+                                    <div class="col-md-6 text-start">
+                                        <p><strong>Reservation ID:</strong> #{{ reservation.id }}</p>
+                                        <p><strong>Name:</strong> {{ reservation.name }}</p>
+                                        <p><strong>Email:</strong> {{ reservation.email }}</p>
+                                        <p><strong>Phone:</strong> {{ reservation.phone }}</p>
+                                    </div>
+                                    <div class="col-md-6 text-start">
+                                        <p><strong>Date:</strong> {{ reservation.date|date:"F j, Y" }}</p>
+                                        <p><strong>Time:</strong> {{ reservation.time|time:"g:i A" }}</p>
+                                        <p><strong>Guests:</strong> {{ reservation.guests }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <a href="{% url 'reservations:my_reservations' %}" class="btn btn-primary me-2">
+                                View My Reservations
+                            </a>
+                            {% if reservation.can_modify %}
+                            <a href="{% url 'reservations:update_reservation' reservation.id %}" class="btn btn-secondary">
+                                Modify Reservation
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

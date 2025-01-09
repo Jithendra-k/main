@@ -1,0 +1,98 @@
+<!-- reservations/templates/reservations/emails/reservation_cancellation.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reservation Cancellation - Royal Nepal Restaurant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #f5f5f5;
+        }
+        .header h1 {
+            color: #ce1212;
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px 0;
+            color: #333333;
+        }
+        .reservation-details {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .detail-row {
+            margin-bottom: 10px;
+            color: #333333;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #333333;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 2px solid #f5f5f5;
+            color: #666;
+        }
+        .cancellation-info {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #333333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Reservation Cancellation Confirmation</h2>
+        <p>Dear {{ reservation.name }},</p>
+
+        <p>Your {% if is_event %}event booking{% else %}table reservation{% endif %} has been cancelled successfully.</p>
+
+        <div class="reservation-details">
+            <h3>Cancelled Reservation Details:</h3>
+            <p><strong>Reservation ID:</strong> #{{ reservation.id }}</p>
+            <p><strong>Date:</strong> {{ formatted_date }}</p>
+            <p><strong>Time:</strong> {{ formatted_time }}</p>
+            <p><strong>Number of Guests:</strong> {{ reservation.guests }}</p>
+        </div>
+
+        {% if is_event and refund_amount > 0 %}
+            <div class="refund-info">
+                <h3>Refund Information:</h3>
+                <p>You will receive a {{ refund_percentage }}% refund of ${{ refund_amount }}</p>
+                <p>The refund will be processed to your original payment method within 5-7 business days.</p>
+            </div>
+        {% endif %}
+
+        <p>If you wish to make a new reservation, please visit our website or contact us at {{ restaurant_contact }}.</p>
+
+        <p>Thank you for choosing {{ restaurant_name }}.</p>
+
+        <div class="footer">
+            <p>Best regards,<br>
+            {{ restaurant_name }} Team</p>
+        </div>
+    </div>
+</body>
+</html>

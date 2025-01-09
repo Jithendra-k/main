@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="my-reservations-section section">
+    <div class="container">
+        <div class="section-title" data-aos="fade-up">
+            <h2>My Reservations</h2>
+            <p><span>Track</span> <span class="description-title">Your Bookings</span></p>
+        </div>
+
+        <!-- Table Reservations -->
+        <div class="table-reservations mb-5" data-aos="fade-up">
+            <h3 class="mb-4">Table Reservations</h3>
+            {% if table_reservations %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Reservation ID</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Guests</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in table_reservations %}
+                            <tr>
+                                <td>#{{ reservation.id }}</td>
+                                <td>{{ reservation.date|date:"F j, Y" }}</td>
+                                <td>{{ reservation.time|time:"g:i A" }}</td>
+                                <td>{{ reservation.guests }}</td>
+                                <td>
+                                    <span class="badge {% if reservation.status == 'confirmed' %}bg-success
+                                               {% elif reservation.status == 'cancelled' %}bg-danger
+                                               {% else %}bg-warning{% endif %}">
+                                        {{ reservation.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if reservation.status != 'cancelled' and reservation.can_modify %}
+                                        <div class="btn-group">
+                                            <a href="{% url 'reservations:update_reservation' reservation.id %}"
+                                               class="btn btn-sm btn-primary">Modify</a>
+                                            <a href="{% url 'reservations:cancel_reservation' reservation.id %}"
+                                               class="btn btn-sm btn-danger">Cancel</a>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <p>No table reservations found.</p>
+                    <a href="{% url 'reservations:book_table' %}" class="btn btn-primary">Book a Table</a>
+                </div>
+            {% endif %}
+        </div>
+        <!-- After table reservations table -->
+        <!-- After table reservations table -->
+        {% include 'includes/pagination_style.html' with items=table_reservations page_param='table_page' extra_param=event_page_param %}
+
+
+
+        <!-- Event Bookings -->
+        <div class="event-bookings" data-aos="fade-up">
+            <h3 class="mb-4">Event Bookings</h3>
+            {% if event_bookings %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Event Type</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Guests</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in event_bookings %}
+                            <tr>
+                                <td>#{{ booking.id }}</td>
+                                <td>{{ booking.event_type.name }}</td>
+                                <td>{{ booking.date|date:"F j, Y" }}</td>
+                                <td>{{ booking.time|time:"g:i A" }}</td>
+                                <td>{{ booking.guests }}</td>
+                                <td>${{ booking.total_amount }}</td>
+                                <td>
+                                    <span class="badge {% if booking.status == 'confirmed' %}bg-success
+                                               {% elif booking.status == 'cancelled' %}bg-danger
+                                               {% else %}bg-warning{% endif %}">
+                                        {{ booking.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if booking.payment_status == 'paid' %}bg-success
+                                               {% else %}bg-warning{% endif %}">
+                                        {{ booking.get_payment_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if booking.status != 'cancelled' and booking.can_modify %}
+                                        {% if booking.payment_status == 'pending' %}
+                                            <a href="{% url 'reservations:event_payment' booking.id %}"
+                                               class="btn btn-sm btn-primary">Complete Payment</a>
+                                        {% endif %}
+                                        <a href="{% url 'reservations:cancel_reservation' booking.id %}"
+                                           class="btn btn-sm btn-danger">Cancel</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <p>No event bookings found.</p>
+                    <a href="{% url 'reservations:book_event' %}" class="btn btn-primary">Book an Event</a>
+                </div>
+            {% endif %}
+        </div>
+        <!-- After event bookings table -->
+        {% include 'includes/pagination_style.html' with items=event_bookings page_param='event_page' extra_param=table_page_param %}
+
+
+        <!-- Booking Actions -->
+        <div class="booking-actions text-center mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'reservations:book_table' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-calendar-plus"></i> Book a Table
+                        </a>
+                        <a href="{% url 'reservations:book_event' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-calendar-event"></i> Book an Event
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cancellation Policy -->
+        <div class="cancellation-policy mt-5">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">Cancellation Policy</h5>
+                    <ul class="mb-0">
+                        <li>Free cancellation up to 3 hours before the reserved time.</li>
+                        <li>Reservations cannot be modified or cancelled within 3 hours of the scheduled time.</li>
+                        <li>For event bookings, refunds will be processed according to our refund policy.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% block extra_css %}
+<style>
+    .badge {
+        font-size: 0.85em;
+        padding: 0.5em 0.75em;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    .booking-actions .btn {
+        padding: 1rem;
+    }
+    .booking-actions .bi {
+        font-size: 1.2rem;
+        margin-right: 0.5rem;
+    }
+</style>
+{% endblock %}
+{% endblock %}

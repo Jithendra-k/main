@@ -1,0 +1,588 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="checkout-section section">
+    <div class="container">
+        <div class="section-title" data-aos="fade-up">
+            <h2>Checkout</h2>
+        </div>
+
+        <div class="row">
+            <!-- Customer Information Form -->
+            <div class="col-lg-8">
+                <form method="post" id="checkoutForm" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Contact Information -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Contact Information</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="name" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="name" name="name"
+                                           value="{{ user.get_full_name }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           value="{{ user.email }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone"
+                                           value="{{ user.profile.phone_number }}" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method Selection -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Payment Method</h5>
+                            <div class="payment-methods">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="payment_method"
+                                           id="inStore" value="in_store" checked>
+                                    <label class="form-check-label" for="inStore">
+                                        Pay at Pickup
+                                        <small class="text-muted d-block">Pay when you pick up your order</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="payment_method"
+                                           id="card" value="card">
+                                    <label class="form-check-label" for="card">
+                                        Credit/Debit Card
+                                        <small class="text-muted d-block">Secure online payment</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tip Selection -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Would you like to add a tip?</h5>
+                            <div class="tip-options">
+                                <!-- Preset tip percentages -->
+                                <div class="mb-3">
+                                    <div class="btn-group w-100" role="group" aria-label="Tip percentage options">
+                                        <input type="radio" class="btn-check" name="tip_option" id="tip_0"
+                                               value="0" autocomplete="off" checked>
+                                        <label class="btn btn-outline-secondary" for="tip_0">No Tip</label>
+
+                                        <input type="radio" class="btn-check" name="tip_option" id="tip_10"
+                                               value="10" autocomplete="off">
+                                        <label class="btn btn-outline-secondary" for="tip_10">10%</label>
+
+                                        <input type="radio" class="btn-check" name="tip_option" id="tip_15"
+                                               value="15" autocomplete="off">
+                                        <label class="btn btn-outline-secondary" for="tip_15">15%</label>
+
+                                        <input type="radio" class="btn-check" name="tip_option" id="tip_20"
+                                               value="20" autocomplete="off">
+                                        <label class="btn btn-outline-secondary" for="tip_20">20%</label>
+                                    </div>
+                                </div>
+
+                                <!-- Custom tip option -->
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="use_custom_tip">
+                                    <label class="form-check-label" for="use_custom_tip">
+                                        Enter custom tip amount
+                                    </label>
+                                </div>
+
+                                <div class="custom-tip-input mt-3" style="display: none;">
+                                    <label for="custom_tip" class="form-label">Custom Tip Amount ($)</label>
+                                    <input type="number" class="form-control" id="custom_tip" name="custom_tip"
+                                           min="0" step="1.0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rewards Section -->
+                    {% if user.profile.rewards_balance > 0 %}
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Rewards</h5>
+                            <div class="alert alert-info d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">Available Rewards: ${{ user.profile.rewards_balance|floatformat:2 }}</h6>
+                                    <small>You can use your rewards to reduce your order total</small>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="useRewards" name="use_rewards">
+                                    <label class="form-check-label" for="useRewards">Use Rewards</label>
+                                </div>
+                            </div>
+
+                            <div id="rewardsAmountSection" style="display: none;">
+                                <div class="mb-3">
+                                    <label class="form-label">Amount to Use</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number"
+                                               class="form-control"
+                                               name="rewards_amount"
+                                               id="rewardsAmount"
+                                               step="1.0"
+                                               min="0"
+                                               max="{{ user.profile.rewards_balance }}"
+                                               value="0">
+                                    </div>
+                                    <small class="text-muted">Maximum available: ${{ user.profile.rewards_balance|floatformat:2 }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Special Instructions -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Additional Information</h5>
+                            <div class="mb-3">
+                                <label for="special_instructions" class="form-label">Special Instructions (Optional)</label>
+                                <textarea class="form-control" id="special_instructions" name="special_instructions"
+                                        rows="3" placeholder="Any special requests or notes for your order?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden input for tip amount -->
+                    <input type="hidden" name="tip_amount" id="hidden_tip_amount" value="0">
+                </form>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Order Summary</h5>
+
+                        <!-- Order Items -->
+                        {% for item in cart_items %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>{{ item.menu_item.name }} × {{ item.quantity }}</span>
+                            <span>${{ item.total_price }}</span>
+                        </div>
+                        {% endfor %}
+
+                        <hr>
+
+                        <!-- Totals -->
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span>${{ cart_total }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax (13%):</span>
+                            <span>${{ tax_amount }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tip:</span>
+                            <span id="tip_amount">$0.00</span>
+                        </div>
+
+                        <!-- Rewards Discount Row -->
+                        <div id="rewardsDiscountRow" class="d-flex justify-content-between mb-2" style="display: none;">
+                            <span>Rewards Applied:</span>
+                            <span class="text-success">-$<span id="rewardsDiscountAmount">0.00</span></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total:</strong>
+                            <strong id="finalTotal">${{ total_with_tax }}</strong>
+                        </div>
+
+                        <!-- Pickup Time Estimate -->
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-clock me-2"></i>
+                            Estimated pickup time: 20-30 minutes after order confirmation
+                        </div>
+
+                        <!-- Place Order Button -->
+                        <button type="submit" form="checkoutForm" class="btn btn-primary w-100">
+                            Place Order
+                        </button>
+
+                        <!-- Continue Shopping -->
+                        <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-secondary w-100 mt-2">
+                            Continue Shopping
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Payment Modal -->
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Complete Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Test Card Info -->
+                <div class="alert alert-info mb-4">
+                    <h6>Test Card Information:</h6>
+                    <p class="mb-2">Use these test card numbers:</p>
+                    <ul class="mb-0">
+                        <li>Success: 4242 4242 4242 4242</li>
+                        <li>Requires Authentication: 4000 0025 0000 3155</li>
+                        <li>Decline: 4000 0000 0000 9995</li>
+                    </ul>
+                    <small>Use any future date for expiry and any 3 digits for CVC</small>
+                </div>
+
+                <!-- Payment Form -->
+                <div id="payment-element"></div>
+                <div id="payment-message" class="alert mt-3" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submit-payment">
+                    Pay $<span id="payment-amount">0.00</span>
+                    <span class="spinner-border spinner-border-sm ms-2" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+    {{ block.super }}
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        const stripe = Stripe('{{ stripe_public_key }}');
+        let elements;
+        let paymentElement;
+        let paymentModal;
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const subtotal = {{ cart_total }};
+    const tax = {{ tax_amount }};
+    const baseTotal = {{ total_with_tax }};
+
+    // Get reward-related elements
+    const useRewardsCheckbox = document.getElementById('useRewards');
+    const rewardsAmountSection = document.getElementById('rewardsAmountSection');
+    const rewardsAmount = document.getElementById('rewardsAmount');
+    const rewardsDiscountRow = document.getElementById('rewardsDiscountRow');
+    const rewardsDiscountAmount = document.getElementById('rewardsDiscountAmount');
+    const finalTotalElement = document.getElementById('finalTotal');
+
+    // Combined function to update all totals
+    function updateAllTotals() {
+        // Calculate tip amount
+        let tipAmount = 0;
+        if (document.getElementById('use_custom_tip').checked) {
+            tipAmount = parseFloat(document.getElementById('custom_tip').value) || 0;
+        } else {
+            const selectedTip = document.querySelector('input[name="tip_option"]:checked');
+            if (selectedTip) {
+                const tipPercentage = parseFloat(selectedTip.value);
+                tipAmount = (subtotal * tipPercentage / 100);
+            }
+        }
+
+        // Calculate rewards discount
+        let rewardsValue = 0;
+        if (useRewardsCheckbox && useRewardsCheckbox.checked) {
+            rewardsValue = parseFloat(rewardsAmount.value) || 0;
+            const maxRewards = {{ user.profile.rewards_balance }};
+            // Ensure rewards don't exceed available balance or total
+            rewardsValue = Math.min(rewardsValue, maxRewards, baseTotal + tipAmount);
+
+            // Update rewards input and display
+            rewardsAmount.value = rewardsValue.toFixed(2);
+            if (rewardsValue > 0) {
+                rewardsDiscountRow.style.display = 'flex';
+                rewardsDiscountAmount.textContent = rewardsValue.toFixed(2);
+            } else {
+                rewardsDiscountRow.style.display = 'none';
+            }
+        }
+
+        // Update displayed values
+        document.getElementById('tip_amount').textContent = `$${tipAmount.toFixed(2)}`;
+        document.getElementById('hidden_tip_amount').value = tipAmount.toFixed(2);
+
+        // Calculate final total: base total + tip - rewards
+        const totalWithTipAndRewards = baseTotal + tipAmount - rewardsValue;
+        finalTotalElement.textContent = `$${totalWithTipAndRewards.toFixed(2)}`;
+    }
+
+    // Event listeners for tips
+    document.querySelectorAll('input[name="tip_option"]').forEach(radio => {
+        radio.addEventListener('change', updateAllTotals);
+    });
+
+    document.getElementById('use_custom_tip').addEventListener('change', function() {
+        const customTipInput = document.querySelector('.custom-tip-input');
+        const tipOptions = document.querySelector('.btn-group');
+
+        if (this.checked) {
+            customTipInput.style.display = 'block';
+            tipOptions.style.opacity = '0.5';
+            tipOptions.style.pointerEvents = 'none';
+            document.querySelectorAll('input[name="tip_option"]').forEach(radio => radio.checked = false);
+        } else {
+            customTipInput.style.display = 'none';
+            tipOptions.style.opacity = '1';
+            tipOptions.style.pointerEvents = 'auto';
+            document.getElementById('tip_0').checked = true;
+        }
+        updateAllTotals();
+    });
+
+    document.getElementById('custom_tip').addEventListener('input', updateAllTotals);
+
+    // Event listeners for rewards
+    if (useRewardsCheckbox) {
+        useRewardsCheckbox.addEventListener('change', function() {
+            rewardsAmountSection.style.display = this.checked ? 'block' : 'none';
+            if (!this.checked) {
+                rewardsAmount.value = '0';
+            }
+            updateAllTotals();
+        });
+    }
+
+    if (rewardsAmount) {
+        rewardsAmount.addEventListener('input', updateAllTotals);
+    }
+
+    // Initialize totals
+    updateAllTotals();
+
+    // Form submission handling
+    // Form submission handling
+    // Update the form submission handler in checkout.html
+    document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+        if (paymentMethod === 'in_store') {
+            // Handle regular form submission for in-store payment
+            this.submit();
+            return;
+        }
+
+        // For online payments, create an order first
+        try {
+            // Get all form fields
+            const formData = new FormData(this);
+
+            // Get values needed for total calculation
+            const tipAmount = parseFloat(formData.get('tip_amount') || '0');
+            const useRewards = formData.get('use_rewards') === 'on';
+            const rewardsAmount = useRewards ? parseFloat(formData.get('rewards_amount') || '0') : 0;
+
+            // Get the base total with tax from the page
+            const baseTotal = {{ total_with_tax }};
+            const finalTotal = baseTotal + tipAmount - rewardsAmount;
+
+            // Create an object from the form data
+            const orderData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                payment_method: formData.get('payment_method'),
+                special_instructions: formData.get('special_instructions'),
+                tip_amount: tipAmount.toString(),
+                use_rewards: useRewards,
+                rewards_amount: rewardsAmount.toString(),
+                total_amount: finalTotal.toString()
+            };
+
+            // Create order and payment intent
+            const response = await fetch("{% url 'orders:checkout' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(orderData)
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Store the order ID for later use
+            const orderId = data.order_id;
+
+            // Initialize Stripe Elements if not already done
+            if (!elements) {
+                elements = stripe.elements({
+                    clientSecret: data.client_secret,
+                    appearance: {
+                        theme: 'stripe',
+                        variables: {
+                            colorPrimary: '#ce1212',
+                        }
+                    }
+                });
+
+                // Create and mount payment element
+                paymentElement = elements.create('payment');
+                paymentElement.mount('#payment-element');
+            }
+
+            // Update payment amount in modal
+            document.getElementById('payment-amount').textContent = data.amount.toFixed(2);
+
+            // Show payment modal
+            if (!paymentModal) {
+                paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            }
+            paymentModal.show();
+
+            // Update the payment submission handler
+            document.getElementById('submit-payment').addEventListener('click', async function() {
+                const submitButton = this;
+                const spinner = submitButton.querySelector('.spinner-border');
+                const messageDiv = document.getElementById('payment-message');
+
+                // Check if messageDiv exists
+                if (!messageDiv) {
+                    console.error('Payment message div not found');
+                    return;
+                }
+
+
+                try {
+                    messageDiv.style.display = 'none';
+                    messageDiv.textContent = '';
+
+
+                    submitButton.disabled = true;
+                    spinner.style.display = 'inline-block';
+
+                    const {error} = await stripe.confirmPayment({
+                        elements,
+                        confirmParams: {
+                            return_url: `${window.location.origin}/order/payment-success/`,
+                        }
+                    });
+
+                    if (error) {
+                        throw error;
+                    }
+                    // Payment successful - redirect will be handled by Stripe
+
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    showError(error.message || 'An error occurred during payment. Please try again.');
+                    submitButton.disabled = false;
+                    spinner.style.display = 'none';
+                }
+            });
+
+        } catch (error) {
+            console.error('Error:', error);
+            showError(error.message || 'An error occurred. Please try again.');
+        }
+    });
+    // Payment confirmation handling
+    document.getElementById('submit-payment').addEventListener('click', async function() {
+        const submitButton = this;
+        const spinner = submitButton.querySelector('.spinner-border');
+
+        try {
+            submitButton.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            const {error} = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    return_url: `${window.location.origin}/order/payment-success/${data.order_id}/`,
+                }
+            });
+
+            if (error) {
+                throw error;
+            }
+            // Payment successful - redirect will be handled by Stripe
+
+        } catch (error) {
+            console.error('Payment error:', error);
+            showError(error.message || 'An error occurred during payment. Please try again.');
+            submitButton.disabled = false;
+            spinner.style.display = 'none';
+        }
+    });
+
+    // Error display function
+    function showError(message) {
+        const messageDiv = document.getElementById('payment-message');
+        messageDiv.textContent = message;
+        messageDiv.className = 'alert alert-danger mt-3';
+        messageDiv.style.display = 'block';
+
+        setTimeout(() => {
+            messageDiv.style.display = 'none';
+        }, 5000);
+    }
+    // Form validation
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+
+    // Payment method label update
+    document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const paymentMethod = this.value;
+            const submitBtn = document.querySelector('button[type="submit"]');
+
+            if (paymentMethod === 'in_store') {
+                submitBtn.textContent = 'Place Order';
+            } else {
+                submitBtn.textContent = 'Proceed to Payment';
+            }
+        });
+    });
+});
+// Add a function to reset modal state
+function resetModalState() {
+    const messageDiv = document.getElementById('payment-message');
+    const submitButton = document.getElementById('submit-payment');
+    const spinner = submitButton.querySelector('.spinner-border');
+
+    messageDiv.style.display = 'none';
+    messageDiv.textContent = '';
+    submitButton.disabled = false;
+    spinner.style.display = 'none';
+}
+// Add event listener to reset modal state when modal is closed
+document.getElementById('paymentModal').addEventListener('hidden.bs.modal', function () {
+    resetModalState();
+});
+</script>
+{% endblock %}
+{% endblock %}

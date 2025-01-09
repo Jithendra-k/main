@@ -1,0 +1,184 @@
+{% load static %}
+<!-- reservations/templates/reservations/reservation_section.html -->
+<section id="book-a-table" class="book-a-table section">
+    <div class="container section-title" data-aos="fade-up">
+        <h2>Book A Table</h2>
+        <p><span>Book Your</span> <span class="description-title">Stay With Us</span></p>
+    </div>
+
+    <div class="container">
+        <div class="row g-0" data-aos="fade-up" data-aos-delay="100">
+            <div class="col-lg-4 reservation-img" style="background-image: url({% static 'img/reservation.jpg' %});"></div>
+            <div class="col-lg-8 d-flex align-items-center reservation-form-bg">
+                <form action="{% url 'reservations:book_table' %}" method="post" class="reservation-form w-100">
+                    {% csrf_token %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row gy-4">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="form-group">
+                                <label for="name" class="form-label">Your Name</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="name"
+                                       name="name"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="form-group">
+                                <label for="email" class="form-label">Your Email</label>
+                                <input type="email"
+                                       class="form-control"
+                                       id="email"
+                                       name="email"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="form-group">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel"
+                                       class="form-control"
+                                       id="phone"
+                                       name="phone"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="form-group">
+                                <label for="date" class="form-label">Reservation Date</label>
+                                <input type="date"
+                                       class="form-control"
+                                       id="date"
+                                       name="date"
+                                       min="{% now 'Y-m-d' %}"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="form-group">
+                                <label for="time" class="form-label">Reservation Time</label>
+                                <input type="time"
+                                       class="form-control"
+                                       id="time"
+                                       name="time"
+                                       required>
+                                <small class="form-text text-muted">Restaurant hours: 11:00 AM - 11:00 PM</small>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="form-group">
+                                <label for="guests" class="form-label">Number of Guests</label>
+                                <select class="form-select" id="guests" name="guests" required>
+                                    <option value="">Select number of guests</option>
+                                    {% for i in "123456789"|make_list %}
+                                        <option value="{{ i }}">{{ i }} {% if i == '1' %}Guest{% else %}Guests{% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="special_request" class="form-label">Special Requests</label>
+                        <textarea class="form-control"
+                                  id="special_request"
+                                  name="special_request"
+                                  rows="4"
+                                  placeholder="Any special requirements or preferences?"></textarea>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Book Now</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% load static %}
+
+
+<!-- Events Section -->
+    <section id="events" class="events section">
+
+      <div class="container-fluid" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="swiper init-swiper">
+          <script type="application/json" class="swiper-config">
+            {
+              "loop": true,
+              "speed": 600,
+              "autoplay": {
+                "delay": 5000
+              },
+              "slidesPerView": "auto",
+              "pagination": {
+                "el": ".swiper-pagination",
+                "type": "bullets",
+                "clickable": true
+              },
+              "breakpoints": {
+                "320": {
+                  "slidesPerView": 1,
+                  "spaceBetween": 40
+                },
+                "1200": {
+                  "slidesPerView": 3,
+                  "spaceBetween": 1
+                }
+              }
+            }
+          </script>
+          <div class="swiper-wrapper">
+
+            <div class="swiper-slide event-item d-flex flex-column justify-content-end" style="background-image: url({% static 'img/events-1.jpg' %})">
+              <h3>Custom Parties</h3>
+              <div class="price align-self-start">$99</div>
+              <p class="description">
+                Quo corporis voluptas ea ad. Consectetur inventore sapiente ipsum voluptas eos omnis facere. Enim facilis veritatis id est rem repudiandae nulla expedita quas.
+              </p>
+            </div><!-- End Event item -->
+
+            <div class="swiper-slide event-item d-flex flex-column justify-content-end" style="background-image: url({% static 'img/events-2.jpg' %})">
+              <h3>Private Parties</h3>
+              <div class="price align-self-start">$289</div>
+              <p class="description">
+                In delectus sint qui et enim. Et ab repudiandae inventore quaerat doloribus. Facere nemo vero est ut dolores ea assumenda et. Delectus saepe accusamus aspernatur.
+              </p>
+            </div><!-- End Event item -->
+
+            <div class="swiper-slide event-item d-flex flex-column justify-content-end" style="background-image: url({% static 'img/events-3.jpg' %}">
+              <h3>Birthday Parties</h3>
+              <div class="price align-self-start">$499</div>
+              <p class="description">
+                Laborum aperiam atque omnis minus omnis est qui assumenda quos. Quis id sit quibusdam. Esse quisquam ducimus officia ipsum ut quibusdam maxime. Non enim perspiciatis.
+              </p>
+            </div><!-- End Event item -->
+
+            <div class="swiper-slide event-item d-flex flex-column justify-content-end" style="background-image: url({% static 'img/events-4.jpg' %})">
+              <h3>Wedding Parties</h3>
+              <div class="price align-self-start">$899</div>
+              <p class="description">
+                Laborum aperiam atque omnis minus omnis est qui assumenda quos. Quis id sit quibusdam. Esse quisquam ducimus officia ipsum ut quibusdam maxime. Non enim perspiciatis.
+              </p>
+            </div><!-- End Event item -->
+
+          </div>
+          <div class="swiper-pagination"></div>
+        </div>
+
+      </div>
+
+    </section><!-- /Events Section -->

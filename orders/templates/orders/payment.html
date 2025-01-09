@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+.payment-methods {
+    max-width: 500px;
+    margin: 0 auto;
+}
+.payment-method {
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.payment-method:hover {
+    border-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+.payment-method.selected {
+    border-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+.payment-logo {
+    height: 40px;
+    object-fit: contain;
+}
+.apple-pay-button {
+    background-color: black;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 200px;
+}
+.apple-pay-button img {
+    height: 24px;
+    margin-right: 10px;
+}
+.paypal-button {
+    background-color: #ffc439;
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 200px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="payment-section section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Complete Your Payment</h2>
+
+                        <!-- Order Summary -->
+                        <div class="order-summary mb-4">
+                            <h5>Order Summary</h5>
+                            <div class="d-flex justify-content-between">
+                                <span>Order #{{ order.id }}</span>
+                                <span>Total: ${{ order.total_amount }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Payment Methods -->
+                        <div class="payment-methods">
+                            <!-- Apple Pay -->
+                            <div id="apple-pay-container" class="mb-4 text-center" style="display: none;">
+                                <button id="apple-pay-button" class="apple-pay-button w-100">
+                                    <img src="{% static 'img/apple-pay-logo.svg' %}" alt="Apple Pay">
+                                    Pay with Apple Pay
+                                </button>
+                            </div>
+
+                            <!-- PayPal -->
+                            <div id="paypal-button-container" class="mb-4"></div>
+
+                            <!-- Regular Card Payment -->
+                            <div id="card-payment-container" class="mb-4">
+                                <div id="payment-element"></div>
+                                <button id="submit-payment" class="btn btn-primary w-100">
+                                    <span id="button-text">Pay with Card</span>
+                                    <span id="loading-spinner" class="spinner-border spinner-border-sm ms-2" style="display: none;"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Payment Status -->
+                        <div id="payment-message" class="alert" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% block extra_js %}
+<!-- PayPal SDK -->
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=USD"></script>
+<!-- Apple Pay -->
+<script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script>
+<script>
+// Check if Apple Pay is available
+if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
+    document.getElementById('apple-pay-container').style.display = 'block';
+}
+
+// Initialize PayPal
+paypal.Buttons({
+    createOrder: function(data, actions) {
+        return fetch('/orders/create-paypal-order/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                order_id: '{{ order.id }}'
+            })
+        })
+        .then(response => response.json())
+        .then(order => order.id);
+    },
+    onApprove: function(data, actions) {
+        return fetch('/orders/capture-paypal-payment/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                order_id: data.orderID
+            })
+        })
+        .then(response => response.json())
+        .then(function(orderData) {
+            window.location.href = '/orders/payment-success/{{ order.id }}/';
+        });
+    }
+}).render('#paypal-button-container');
+
+// Apple Pay Implementation
+document.getElementById('apple-pay-button').addEventListener('click', function(event) {
+    const paymentRequest = {
+        countryCode: 'US',
+        currencyCode: 'USD',
+        total: {
+            label: 'Royal Nepal Restaurant',
+            amount: '{{ order.total_amount }}'
+        }
+    };
+
+    const session = new ApplePaySession(3, paymentRequest);
+
+    session.onvalidatemerchant = function(event) {
+        fetch('/orders/validate-apple-pay/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                validationURL: event.validationURL
+            })
+        })
+        .then(response => response.json())
+        .then(merchantSession => {
+            session.completeMerchantValidation(merchantSession);
+        });
+    };
+
+    session.onpaymentauthorized = function(event) {
+        fetch('/orders/process-apple-pay/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                payment: event.payment,
+                order_id: '{{ order.id }}'
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                session.completePayment(ApplePaySession.STATUS_SUCCESS);
+                window.location.href = '/orders/payment-success/{{ order.id }}/';
+            } else {
+                session.completePayment(ApplePaySession.STATUS_FAILURE);
+            }
+        });
+    };
+
+    session.begin();
+});
+</script>
+{% endblock %}
+{% endblock %}

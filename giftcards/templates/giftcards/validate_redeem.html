@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Gift Card Validation/Redemption</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Gift Card Details</h5>
+                            <p><strong>Card Number:</strong> #{{ giftcard.card_number }}</p>
+                            <p><strong>UUID:</strong> {{ giftcard.card_id }}</p>
+                            <p><strong>Amount:</strong> ${{ giftcard.amount }}</p>
+                            <p><strong>Balance:</strong> ${{ giftcard.balance }}</p>
+                            <p><strong>Status:</strong> {{ giftcard.get_status_display }}</p>
+                            <p><strong>Expiry Date:</strong> {{ giftcard.expiry_date|date:"F j, Y" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <form id="validateForm" class="mb-4">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">Enter Card Number</label>
+                                    <input type="text" class="form-control" id="cardNumber" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Validate</button>
+                            </form>
+
+                            <form id="redeemForm" style="display: none;">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">Amount to Redeem</label>
+                                    <input type="number" class="form-control" id="redeemAmount"
+                                           step="0.01" min="0.01" required>
+                                </div>
+                                <button type="submit" class="btn btn-success">Redeem</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.getElementById('validateForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const cardNumber = document.getElementById('cardNumber').value;
+    try {
+        const response = await fetch(`/giftcards/validate/${cardNumber}/`);
+        const data = await response.json();
+        if (data.valid) {
+            document.getElementById('redeemForm').style.display = 'block';
+            // Update display fields with card details
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert('Error validating card');
+    }
+});
+
+document.getElementById('redeemForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const amount = document.getElementById('redeemAmount').value;
+    try {
+        const response = await fetch(`/giftcards/redeem/{{ giftcard.card_number }}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ amount: amount })
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert('Redemption successful!');
+            window.location.reload();
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert('Error redeeming card');
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

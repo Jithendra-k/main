@@ -1,0 +1,81 @@
+<!-- templates/accounts/transactions.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h2 class="mb-4">Recent Transactions</h2>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if transaction.transaction_type == 'order' %}
+                                        Order Payment
+                                    {% elif transaction.transaction_type == 'refund' %}
+                                        Refund
+                                    {% elif transaction.transaction_type == 'giftcard_purchase' %}
+                                        Gift Card Purchase
+                                    {% elif transaction.transaction_type == 'giftcard_redemption' %}
+                                        Gift Card Redemption
+                                    {% else %}
+                                        {{ transaction.transaction_type }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ transaction.description }}</td>
+                                <td>${{ transaction.amount }}</td>
+                                <td>
+                                    <span class="badge {% if transaction.status == 'completed' %}bg-success
+                                        {% elif transaction.status == 'refunded' %}bg-warning
+                                        {% elif transaction.status == 'failed' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ transaction.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ transaction.reference_id }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% include 'includes/pagination_style.html' with items=transactions %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% block extra_css %}
+<style>
+.section {
+    padding: 80px 0;
+}
+.card {
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.table td {
+    vertical-align: middle;
+}
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 500;
+}
+</style>
+{% endblock %}
+{% endblock %}

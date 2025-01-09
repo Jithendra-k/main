@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% block extra_js %}
+<script>
+    // Clear messages on page load
+    window.onload = function() {
+        // Clear session storage
+        sessionStorage.removeItem('messages');
+
+        // Clear any existing messages
+        fetch('{% url "reservations:clear_messages" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        });
+    }
+
+    // Listen for navigation events
+    window.onbeforeunload = function() {
+        sessionStorage.removeItem('messages');
+    }
+</script>
+{% endblock %}
+{% load static %}
+
+{% block content %}
+
+<section class="book-table-section section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h3 class="section-subtitle">BOOK A TABLE</h3>
+            <h2 class="section-title">Book Your Stay With Us</h2>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="booking-form-wrapper">
+                    <div class="row">
+                        <!-- Form Side -->
+                        <div class="col-lg-7">
+                            <form id="bookingForm" action="{% url 'reservations:book_table' %}" method="post" class="booking-form">
+                                {% csrf_token %}
+                                {% if messages and request.method == 'POST' %}
+                                <!-- Only show messages if they're from current POST request -->
+                                    <div id="errorModal" class="modal fade" tabindex="-1" role="dialog">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Reservation Status</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            onclick="clearMessages()" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% for message in messages %}
+                                                        <div class="alert alert-{{ message.tags }}">
+                                                            {{ message }}
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                            onclick="clearMessages()"
+                                                            data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <script>
+                                    function clearMessages() {
+                                        fetch('{% url "reservations:clear_messages" %}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'X-CSRFToken': '{{ csrf_token }}',
+                                                'Content-Type': 'application/json'
+                                            }
+                                        }).then(() => {
+                                            sessionStorage.removeItem('messages');
+                                        });
+                                    }
+
+                                    // Show modal only if there are new messages
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        if (document.getElementById('errorModal')) {
+                                            var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                                            errorModal.show();
+                                        }
+                                    });
+                                    </script>
+                                    {% endif %}
+
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="name" name="name" placeholder="Your Name" required>
+                                            <label for="name">Your Name</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="email" class="form-control" id="email" name="email" placeholder="Your Email" required>
+                                            <label for="email">Your Email</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="tel" class="form-control" id="phone" name="phone" placeholder="Phone Number" required>
+                                            <label for="phone">Phone Number</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <select class="form-select" id="guests" name="guests" required>
+                                                <option value="">Select number of guests</option>
+                                                {% for i in "123456789"|make_list %}
+                                                    <option value="{{ i }}">{{ i }} {% if i == '1' %}Guest{% else %}Guests{% endif %}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <label for="guests">Number of Guests</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="date" class="form-control" id="date" name="date"
+                                                   min="{% now 'Y-m-d' %}" required>
+                                            <label for="date">Reservation Date</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="time" class="form-control" id="time" name="time" required>
+                                            <label for="time">Reservation Time</label>
+                                            <small class="text-muted">Restaurant hours: 11:00 AM - 11:00 PM</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="form-floating">
+                                            <textarea class="form-control" id="special_request" name="special_request"
+                                                      style="height: 120px" placeholder="Special Requests (Optional)"></textarea>
+                                            <label for="special_request">Special Requests (Optional)</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 text-center">
+                                        <button type="submit" class="btn btn-book-table">Book Now</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Image Side -->
+                        <div class="col-lg-5 d-none d-lg-block">
+                            <div class="booking-image">
+                                <img src="{% static 'img/table-booking.jpg' %}" alt="Table Setting" class="img-fluid rounded-3">
+                                <div class="booking-info">
+                                    <h4>Why Reserve With Us?</h4>
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-check2-circle"></i> Instant confirmation</li>
+                                        <li><i class="bi bi-check2-circle"></i> Free cancellation</li>
+                                        <li><i class="bi bi-check2-circle"></i> Special occasion setup</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% block extra_css %}
+<style>
+body {
+    background-color: #f4f4f4;
+    background-image: linear-gradient(to right, #f9f9f9 0%, #f4f4f4 100%);
+}
+
+.book-table-section {
+    padding: 80px 0;
+    background: transparent;
+}
+
+.section-subtitle {
+    color: #ce1212;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.section-title {
+    font-size: 48px;
+    font-weight: 400;
+    margin-bottom: 40px;
+}
+
+.booking-form-wrapper {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    border: 1px solid #e9ecef;
+}
+
+.form-floating {
+    margin-bottom: 5px;
+}
+
+.form-control, .form-select {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    height: 58px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #ce1212;
+    box-shadow: 0 0 0 0.2rem rgba(206, 18, 18, 0.25);
+}
+
+textarea.form-control {
+    height: auto;
+}
+
+.btn-book-table {
+    background: #ce1212;
+    color: #fff;
+    padding: 15px 40px;
+    border-radius: 30px;
+    border: none;
+    font-size: 16px;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+}
+
+.btn-book-table:hover {
+    background: #b31010;
+    transform: translateY(-2px);
+}
+
+.booking-image {
+    position: relative;
+    height: 100%;
+}
+
+.booking-image img {
+    height: 100%;
+    object-fit: cover;
+    border-radius: 15px;
+}
+
+.booking-info {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    right: 30px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 25px;
+    border-radius: 10px;
+}
+
+.booking-info h4 {
+    color: #ce1212;
+    margin-bottom: 15px;
+}
+
+.booking-info ul li {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.booking-info ul li i {
+    color: #ce1212;
+    margin-right: 10px;
+}
+
+.text-muted {
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: block;
+}
+
+@media (max-width: 991px) {
+    .section-title {
+        font-size: 36px;
+    }
+
+    .booking-form-wrapper {
+        padding: 30px;
+    }
+}
+</style>
+{% endblock %}
+
+
+{% endblock %}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Your Order is Ready for Pickup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            color: #ce1212;
+            margin-bottom: 20px;
+        }
+        .order-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Your Order is Ready for Pickup!</h2>
+        </div>
+
+        <p>Dear {{ order.name }},</p>
+
+        <p>Great news! Your order #{{ order.id }} is now ready for pickup at Royal Nepal Restaurant.</p>
+
+        <div class="order-details">
+            <h3>Order Details:</h3>
+            <ul>
+                {% for item in order.items.all %}
+                <li>{{ item.menu_item.name }} x {{ item.quantity }}</li>
+                {% endfor %}
+            </ul>
+            <p><strong>Total Amount:</strong> ${{ order.total_amount }}</p>
+        </div>
+
+        <p><strong>Pickup Location:</strong><br>
+        Royal Nepal Restaurant<br>
+        [Restaurant Address]<br>
+        Phone: (555) 123-4567</p>
+
+        <p>Please note that your order will be kept warm for pickup within the next hour.</p>
+
+        <div class="footer">
+            <p>Thank you for choosing Royal Nepal Restaurant!</p>
+            <p>If you have any questions, please don't hesitate to contact us.</p>
+        </div>
+    </div>
+</body>
+</html>

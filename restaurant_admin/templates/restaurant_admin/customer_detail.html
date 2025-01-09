@@ -1,0 +1,193 @@
+{% extends 'restaurant_admin/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <!-- Customer Info -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Customer Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ customer.user.get_full_name|default:customer.user.username }}</p>
+                    <p><strong>Email:</strong> {{ customer.user.email }}</p>
+                    <p><strong>Phone:</strong> {{ customer.phone_number|default:"Not provided" }}</p>
+                    <p><strong>Member Since:</strong> {{ customer.user.date_joined|date:"F j, Y" }}</p>
+
+                    <hr>
+
+                    <h6>Loyalty Program Status</h6>
+                    <p><strong>Current Points:</strong> {{ customer.loyalty_points }}</p>
+                    <p><strong>Rewards Balance:</strong> ${{ customer.rewards_balance }}</p>
+                    <p><small class="text-muted">1,000 points = $5 reward</small></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add this section after customer info -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Transaction Summary</h5>
+                    <a href="{% url 'restaurant_admin:customer_transactions' customer.user.id %}"
+                       class="btn btn-primary btn-sm">
+                        <i class="bi bi-credit-card me-1"></i>View All Transactions
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Total Orders:</strong> {{ total_orders }}</p>
+                            <p><strong>Total Spent:</strong> ${{ total_spent|default:"0.00" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Total Refunds:</strong> ${{ total_refunds|default:"0.00" }}</p>
+                            <p><strong>Last Transaction:</strong> {{ last_transaction_date|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                    <!-- Recent Transactions -->
+                    <div class="mt-3">
+                        <h6>Recent Transactions</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in recent_transactions|slice:":4" %}
+                                    <tr>
+                                        <td>{{ transaction.created_at|date:"M d, Y" }}</td>
+                                        <td>{{ transaction.transaction_type }}</td>
+                                        <td>${{ transaction.amount }}</td>
+                                        <td>
+                                            <span class="badge {% if transaction.status == 'completed' %}bg-success
+                                                {% elif transaction.status == 'refunded' %}bg-warning
+                                                {% elif transaction.status == 'failed' %}bg-danger
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ transaction.get_status_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <!-- Order History -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Date</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Points Earned</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% for item in order.items.all %}
+                                            {{ item.quantity }}x {{ item.menu_item.name }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>${{ order.total_amount }}</td>
+                                    <td>{{ order.points_earned|default:"0"|intcomma }} pts</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                            <!-- After orders table -->
+                        {% include 'includes/pagination_style.html' with items=orders page_param='order_page' extra_param=res_page_param %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{#            <!-- Reservation History -->#}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Reservation History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Name</th>
+                                    <th>Time</th>
+                                    <th>Guests</th>
+                                    <th>Status</th>
+                                    <th>Arrival</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reservation in reservations %}
+                                <tr>
+                                    <td>{{ reservation.date|date:"M d, Y" }}</td>
+                                    <td>{{ reservation.name }}</td>
+                                    <td>{{ reservation.time|time:"g:i A" }}</td>
+                                    <td>{{ reservation.guests }}</td>
+                                    <td>
+                                        <span class="badge {% if reservation.status == 'confirmed' %}bg-success
+                                            {% elif reservation.status == 'pending' %}bg-warning
+                                            {% else %}bg-danger{% endif %}">
+                                            {{ reservation.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if reservation.status == 'confirmed' %}
+                                        <select class="form-select form-select-sm arrival-status-select"
+                                                data-reservation-id="{{ reservation.id }}"
+                                                {% if not show_all and reservation.arrival_status != 'not_arrived' %}disabled{% endif %}>
+                                            <option value="not_arrived" {% if reservation.arrival_status == 'not_arrived' %}selected{% endif %}>
+                                                Not yet Arrived
+                                            </option>
+                                            <option value="seated" {% if reservation.arrival_status == 'seated' %}selected{% endif %}>
+                                                Seated
+                                            </option>
+                                            <option value="no_show" {% if reservation.arrival_status == 'no_show' %}selected{% endif %}>
+                                                No Show
+                                            </option>
+                                        </select>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% if reservations %}
+                        {% include 'includes/pagination_style.html' with items=reservations page_param='res_page' extra_param=order_page_param %}
+                    {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

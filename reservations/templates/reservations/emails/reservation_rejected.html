@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reservation Not Available - Royal Nepal Restaurant</title>
+    <style>
+        /* Same styles as confirmation email */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Reservation Update</h1>
+        </div>
+
+        <p>Dear {{ reservation.name }},</p>
+
+        <p>We regret to inform you that we are unable to accommodate your reservation request for the following details:</p>
+
+        <div class="details">
+            <p><strong>Date:</strong> {{ reservation.date|date:"F j, Y" }}</p>
+            <p><strong>Time:</strong> {{ reservation.time|time:"g:i A" }}</p>
+            <p><strong>Number of Guests:</strong> {{ reservation.guests }}</p>
+        </div>
+
+        <p>This could be due to capacity constraints or other bookings for that time slot.</p>
+
+        <p>We invite you to:</p>
+        <ul>
+            <li>Try booking for a different time or date</li>
+            <li>Contact us directly at [Phone Number] for assistance</li>
+        </ul>
+
+        <p>We apologize for any inconvenience and hope to serve you soon.</p>
+
+        <p>Best regards,<br>
+        Royal Nepal Restaurant Team</p>
+    </div>
+</body>
+</html>

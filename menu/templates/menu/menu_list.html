@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Debug Information -->
+{% if debug %}
+<div class="container mt-3">
+    <div class="alert alert-info">
+        <h4>Debug Information:</h4>
+        <h5>Categories:</h5>
+        <ul>
+        {% for category in categories %}
+            <li>{{ category.name }} (Order: {{ category.display_order }})</li>
+        {% endfor %}
+        </ul>
+
+        <h5>Menu Items:</h5>
+        <ul>
+        {% for item in menu_items %}
+            <li>{{ item.name }} (Category: {{ item.category.name }})
+                {% if item.image %}
+                    - Image: {{ item.image.url }}
+                {% else %}
+                    - No image
+                {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+<section class="menu-section section">
+    <div class="container">
+        <div class="section-title" data-aos="fade-up">
+            <h2>Our Menu</h2>
+            <p><span>Discover</span> <span class="description-title">Our Delicious Menu</span></p>
+        </div>
+
+        <div class="row">
+            <!-- Categories Sidebar -->
+            <div class="col-lg-3">
+                <div class="category-sidebar sticky-top" style="top: 120px; z-index: 10;" data-aos="fade-up">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Categories</h5>
+                            <div class="list-group">
+                                {% for category in categories %}
+                                    <a href="#category-{{ category.slug }}" class="list-group-item list-group-item-action">
+                                        {{ category.name }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floating Cart -->
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Your Cart</h5>
+                            <div id="cart-items"></div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <strong>Total:</strong>
+                                <strong id="cart-total">$0.00</strong>
+                            </div>
+                            <button onclick="window.location.href='{% url 'orders:cart_detail' %}'"
+                                    class="btn btn-primary w-100 mt-3"
+                                    id="view-cart-btn"
+                                    disabled>
+                                View Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Items -->
+            <div class="col-lg-9">
+                {% for category in categories %}
+                    <div id="category-{{ category.slug }}" class="menu-category mb-5" data-aos="fade-up">
+                        <h3 class="category-title mb-4">{{ category.name }}</h3>
+                        <p class="category-description mb-4">{{ category.description }}</p>
+
+                        <div class="row g-4">
+                            {% for item in menu_items %}
+                                {% if item.category == category %}
+                                    <div class="col-md-4">
+                                        <div class="card menu-item-card h-100">
+                                            {% if item.image %}
+                                                <img src="{{ item.image.url }}" class="card-img-top menu-item-image" alt="{{ item.name }}">
+                                            {% else %}
+                                                <img src="{% static 'img/menu-default.jpg' %}" class="card-img-top menu-item-image" alt="{{ item.name }}">
+                                            {% endif %}
+                                            <div class="card-body d-flex flex-column">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <h5 class="card-title">{{ item.name }}</h5>
+                                                    <span class="badge {% if item.spice_level == 'very_spicy' %}bg-danger{% elif item.spice_level == 'spicy' %}bg-warning{% elif item.spice_level == 'medium' %}bg-info{% endif %}">
+                                                        {{ item.get_spice_level_display }}
+                                                    </span>
+                                                </div>
+                                                <p class="card-text flex-grow-1">{{ item.description }}</p>
+                                                <div class="mt-3">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="price">${{ item.price }}</span>
+                                                        {% if item.is_available %}
+                                                            <div class="quantity-control d-flex align-items-center">
+                                                                <button class="btn btn-outline-secondary btn-sm" onclick="updateCart({{ item.id }}, '{{ item.name }}', {{ item.price }}, -1)">-</button>
+                                                                <span id="quantity-{{ item.id }}" class="mx-2">0</span>
+                                                                <button class="btn btn-outline-secondary btn-sm" onclick="updateCart({{ item.id }}, '{{ item.name }}', {{ item.price }}, 1)">+</button>
+                                                            </div>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">Not Available</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+    <!-- Add this modal for store status messages -->
+<div class="modal fade" id="storeStatusModal" tabindex="-1" aria-labelledby="storeStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="storeStatusModalLabel">Store Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="storeStatusMessage">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .menu-item-card {
+        width: 100%;
+        transition: transform 0.2s;
+    }
+    .menu-item-card:hover {
+        transform: translateY(-5px);
+    }
+    .menu-item-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+    .price {
+        color: #ce1212;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    .quantity-control {
+        align-items: center;
+    }
+    .quantity-control .btn {
+        padding: 0.25rem 0.5rem;
+    }
+    .category-title {
+        color: #ce1212;
+        font-weight: 700;
+    }
+
+    /* Navbar Fix */
+    header {
+        z-index: 1050;
+        position: fixed;
+        width: 100%;
+        top: 0;
+    }
+
+    /* Adjust content padding */
+    body {
+        margin-top: 0;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+// Update the checkStoreStatus function to return a Promise
+async function checkStoreStatus() {
+    try {
+        const response = await fetch('/orders/check-store-status/');
+        const data = await response.json();
+
+        if (data.status !== 'open') {
+            const modal = new bootstrap.Modal(document.getElementById('storeStatusModal'));
+            const messageDiv = document.getElementById('statusMessage');
+
+            if (data.status === 'closed') {
+                messageDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        <strong>Store is currently closed</strong>
+                        <p class="mb-0 mt-2">We're closed for today. Our store hours are from 12:00 PM to 9:00 PM.
+                        Please place your order during store hours.</p>
+                    </div>`;
+            } else if (data.status === 'paused') {
+                messageDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-pause-circle-fill me-2"></i>
+                        <strong>Orders Temporarily Paused</strong>
+                        <p class="mb-0 mt-2">We're currently experiencing high order volume.
+                        Please try again after 30 minutes.</p>
+                    </div>`;
+            }
+            modal.show();
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('Error checking store status:', error);
+        return false;
+    }
+}
+
+
+let cart = {};
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Load cart from session if exists
+    fetch('{% url "orders:get_cart" %}')
+        .then(response => response.json())
+        .then(data => {
+            cart = data;
+            updateCartDisplay();
+            updateQuantityDisplays();
+        });
+
+    // Smooth scroll for category links
+    document.querySelectorAll('.category-sidebar a').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            document.querySelector(targetId).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+});
+
+async function updateCart(itemId, itemName, price, change) {
+    // Initialize item in cart if not exists
+
+    if (!cart[itemId]) {
+        cart[itemId] = { name: itemName, price: price, quantity: 0 };
+    }
+
+    // Update quantity
+    cart[itemId].quantity = Math.max(0, Math.min(10, cart[itemId].quantity + change));
+
+    // Update quantity display
+    document.getElementById(`quantity-${itemId}`).innerText = cart[itemId].quantity;
+
+    // Remove item from cart if quantity is 0
+    if (cart[itemId].quantity === 0) {
+        delete cart[itemId];
+    }
+
+    updateCartDisplay();
+    saveCartToSession();
+
+    // Show notification for changes
+    if (change > 0) {
+        showNotification(`Added 1 × ${itemName}`);
+    } else if (change < 0) {
+        showNotification(`Removed 1 × ${itemName}`);
+    }
+}
+
+document.querySelector('a[href*="checkout"]')?.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const canProceed = await checkStoreStatus();
+    if (canProceed) {
+        window.location.href = this.href;
+    }
+});
+
+function updateCartDisplay() {
+    const cartItems = document.getElementById('cart-items');
+    const viewCartBtn = document.getElementById('view-cart-btn');
+    let total = 0;
+    let html = '';
+
+    for (let itemId in cart) {
+        const item = cart[itemId];
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        html += `
+            <div class="cart-item mb-2">
+                <div class="d-flex justify-content-between">
+                    <span>${item.name} × ${item.quantity}</span>
+                    <span>$${itemTotal.toFixed(2)}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    cartItems.innerHTML = html;
+    document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+    viewCartBtn.disabled = total === 0;
+}
+
+function updateQuantityDisplays() {
+    // Update all quantity displays based on current cart state
+    for (let itemId in cart) {
+        const quantitySpan = document.getElementById(`quantity-${itemId}`);
+        if (quantitySpan) {
+            quantitySpan.innerText = cart[itemId].quantity;
+        }
+    }
+}
+
+function saveCartToSession() {
+    fetch('{% url "orders:save_cart" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify(cart)
+    });
+}
+
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-success position-fixed top-0 end-0 m-3';
+    notification.style.zIndex = '1050';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+
+
+</script>
+{% endblock %}
+{% endblock %}

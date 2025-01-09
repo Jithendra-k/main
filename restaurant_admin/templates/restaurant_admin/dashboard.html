@@ -1,0 +1,373 @@
+{% extends 'restaurant_admin/base.html' %}
+{% csrf_token %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Store Status</h5>
+                <div class="d-flex align-items-center mt-3">
+                    <div class="status-indicator
+                        {% if store_status == 'open' %}bg-success
+                        {% elif store_status == 'paused' %}bg-warning
+                        {% else %}bg-danger{% endif %}">
+                    </div>
+                    <select id="storeStatus" class="form-select ms-3" onchange="updateStoreStatus(this.value)">
+                        <option value="open" {% if store_status == 'open' %}selected{% endif %}>We are Open</option>
+                        <option value="paused" {% if store_status == 'paused' %}selected{% endif %}>Paused</option>
+                        <option value="closed" {% if store_status == 'closed' %}selected{% endif %}>We are Closed</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Total Sales Card -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Total Sales Today</h5>
+                <div class="d-flex align-items-center mt-3">
+                    <h3 class="mb-0">${{ total_sales|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Orders Card -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Total Orders Today</h5>
+                <div class="d-flex align-items-center mt-3">
+                    <h3 class="mb-0">{{ total_orders }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+</style>
+
+<div class="row">
+    <!-- Reservations Column -->
+<div class="col-md-6">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h3>Reservations</h3>
+                <div class="d-flex align-items-center mt-2">
+                    <input type="date" class="form-control form-control-sm me-2" id="reservationDate"
+                           value="{{ today|date:'Y-m-d' }}">
+                    <button class="btn btn-sm btn-primary" onclick="loadReservations()">
+{#                        <i class="bi bi-calendar-event"></i> View#}
+                        View
+                    </button>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addReservationModal">
+                <i class="bi bi-plus"></i> Add Reservation
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+{#                            <th>ID</th>#}
+                            <th>Name</th>
+                            <th>Guests</th>
+                            <th>Status</th>
+                            <th>Arrival</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reservationsTableBody">
+                        {% include 'restaurant_admin/reservations_table.html' with reservations=today_reservations %}
+                    </tbody>
+                </table>
+
+                <!-- Pagination for Reservations -->
+                {% if today_reservations.paginator.num_pages > 1 %}
+                    {% include 'includes/pagination_style.html' with items=today_reservations page_param='res_page' extra_param=order_page_param %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Orders Column -->
+<!-- Orders Column -->
+<div class="col-md-6">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3>Orders <small class="text-muted">({{ today|date:"F d, Y" }})</small></h3>
+            <div>
+                <a href="{% url 'restaurant_admin:order_stats' %}" class="btn btn-sm btn-primary">
+                    All Orders
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if today_orders %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Order #</th>
+                            <th>Total</th>
+                            <th>Status</th>
+{#                            <th>Payment Status</th>#}
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in today_orders %}
+                        <tr>
+                            <td>{{ order.created_at|time:"H:i" }}</td>
+                            <td>{{ order.id }}</td>
+                            <td>${{ order.total_amount }}</td>
+                            <td>
+                                <span class="badge {% if order.status == 'pending' %}bg-warning
+                                    {% elif order.status == 'in_progress' %}bg-info
+                                    {% elif order.status == 'ready' %}bg-success
+                                    {% elif order.status == 'completed' %}bg-secondary
+                                    {% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+{#                            <td>#}
+{#                                <span class="badge {% if order.payment_status == 'paid' %}bg-success#}
+{#                                    {% elif order.payment_status == 'pending' %}bg-warning#}
+{#                                    {% else %}bg-danger{% endif %}">#}
+{#                                    {{ order.get_payment_status_display }}#}
+{#                                </span>#}
+{#                            </td>#}
+                            <td>
+                                <a href="{% url 'restaurant_admin:order_details' order.id %}"
+                                   class="btn btn-sm btn-primary">
+                                    View
+                                </a>
+                                {% if order.status == 'pending' %}
+                                    <button class="btn btn-sm btn-primary order-status-btn"
+                                            data-status="in_progress"
+                                            data-order-id="{{ order.id }}">
+                                        Start Preparing
+                                    </button>
+                                {% elif order.status == 'in_progress' %}
+                                    <button class="btn btn-sm btn-success order-status-btn"
+                                            data-status="ready"
+                                            data-order-id="{{ order.id }}">
+                                        Mark as Ready
+                                    </button>
+                                {% elif order.status == 'ready' %}
+                                    <button class="btn btn-sm btn-secondary order-status-btn"
+                                            data-status="completed"
+                                            data-order-id="{{ order.id }}">
+                                        Mark as Picked Up
+                                    </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <!-- After orders table -->
+                {% include 'includes/pagination_style.html' with items=today_orders page_param='order_page' %}
+            {% else %}
+                <p class="text-center text-muted my-3">No orders for today</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Reservation Modal -->
+<div class="modal fade" id="addReservationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Manual Reservation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'restaurant_admin:add_manual_reservation' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Customer Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="phone" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Time</label>
+                        <input type="time" name="time" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Number of Guests</label>
+                        <input type="number" name="guests" class="form-control" min="1" value="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Reservation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+<script>
+//store hours
+function updateStoreStatus(status) {
+    fetch('/restaurant-admin/update-store-status/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ status: status })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Update status indicator color
+            const indicator = document.querySelector('.status-indicator');
+            indicator.className = 'status-indicator ' +
+                (status === 'open' ? 'bg-success' :
+                 status === 'paused' ? 'bg-warning' : 'bg-danger');
+        }
+    });
+}
+
+    // Order Status Update
+    document.querySelectorAll('.order-status-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const orderId = this.dataset.orderId;
+        const status = this.dataset.status;
+
+        fetch(`/restaurant-admin/order/${orderId}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: `status=${status}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            }
+        });
+    });
+});
+
+function updateReservationStatus(reservationId, action) {
+    fetch(`/restaurant-admin/reservation/${reservationId}/update-status/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: `action=${action}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            loadReservations();  // Reload the table instead of full page
+        }
+    })
+    .catch(error => {
+        console.error('Error updating reservation:', error);
+    });
+}
+
+function loadReservations() {
+    const date = document.getElementById('reservationDate').value;
+    const currentPage = new URLSearchParams(window.location.search).get('res_page') || '1';
+
+    fetch(`/restaurant-admin/reservations/?date=${date}&res_page=${currentPage}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('reservationsTableBody').innerHTML = data.html;
+            // Update pagination if provided
+            const paginationContainer = document.querySelector('.pagination').closest('nav');
+            if (data.pagination) {
+                paginationContainer.innerHTML = data.pagination;
+            }
+            // Reinitialize arrival status handlers
+            initializeArrivalStatusHandlers();
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function initializeArrivalStatusHandlers() {
+    document.querySelectorAll('.arrival-status-select').forEach(select => {
+        select.addEventListener('change', function() {
+            updateArrivalStatus(this);
+        });
+    });
+}
+
+function updateArrivalStatus(selectElement) {
+    const reservationId = selectElement.dataset.reservationId;
+    const status = selectElement.value;
+    const isDateView = document.querySelector('[data-view-type="date"]') !== null;
+
+    fetch(`/restaurant-admin/reservation/${reservationId}/update-arrival-status/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `status=${status}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Show success message
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+            alert.style.zIndex = '1050';
+            alert.innerHTML = `
+                Arrival status updated successfully
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+
+            setTimeout(() => alert.remove(), 3000);
+
+            // If not in date view, hide the row if status changed from not_arrived
+            if (!isDateView && status !== 'not_arrived') {
+                const row = selectElement.closest('tr');
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 500);
+            }
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Initialize handlers when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.arrival-status-select').forEach(select => {
+        select.addEventListener('change', function() {
+            updateArrivalStatus(this);
+        });
+    });
+});
+</script>
+{% endblock %}

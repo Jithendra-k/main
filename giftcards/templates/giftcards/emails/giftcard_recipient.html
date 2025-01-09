@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <style>
+        .gift-card {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            font-family: Arial, sans-serif;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo img {
+            max-width: 150px;
+        }
+        .restaurant-name {
+            color: #ce1212;
+            font-size: 24px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .amount {
+            text-align: center;
+            font-size: 36px;
+            color: #ce1212;
+            margin: 30px 0;
+        }
+        .card-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .message {
+            font-style: italic;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #ce1212;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+        }
+    </style>
+    <title></title>
+</head>
+<body>
+    <div class="gift-card">
+        <div class="logo">
+            <img src="{% static 'img/logo.png' %}" alt="Royal Nepal Restaurant">
+        </div>
+
+        <div class="restaurant-name">
+            Royal Nepal Restaurant
+        </div>
+
+        <div class="amount">
+            ${{ gift_card.amount }}
+        </div>
+
+        <p>Dear {{ gift_card.recipient_name }},</p>
+
+        <p>You've received a gift card from {{ gift_card.purchaser.get_full_name }}!</p>
+
+        {% if gift_card.message %}
+        <div class="message">
+            "{{ gift_card.message }}"
+        </div>
+        {% endif %}
+
+        <div class="card-details">
+            <p><strong>Gift Card ID:</strong> {{ gift_card.card_id }}</p>
+            <p><strong>Valid Until:</strong> {{ gift_card.expiry_date|date:"F j, Y" }}</p>
+            <p><strong>Current Balance:</strong> ${{ gift_card.balance }}</p>
+        </div>
+
+        <div class="usage-instructions">
+            <h3>How to Use Your Gift Card</h3>
+            <ol>
+                <li>Visit Royal Nepal Restaurant</li>
+                <li>Present this email or your gift card ID when paying</li>
+                <li>Enjoy your meal!</li>
+            </ol>
+        </div>
+
+        <div class="footer">
+            <p>Terms and Conditions:</p>
+            <small>
+                This gift card is valid for one year from the date of purchase.
+                Cannot be exchanged for cash. Lost or stolen cards cannot be replaced.
+            </small>
+            <p>Thank you for choosing Royal Nepal Restaurant!</p>
+        </div>
+    </div>
+</body>
+</html>

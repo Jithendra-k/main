@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="cart-section section">
+    <div class="container">
+        <div class="section-title" data-aos="fade-up">
+            <h2>Shopping Cart</h2>
+            <p><span>Review</span> <span class="description-title">Your Order</span></p>
+        </div>
+
+        {% if cart_items %}
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in cart_items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if item.menu_item.image %}
+                                                <img src="{{ item.menu_item.image.url }}"
+                                                     alt="{{ item.menu_item.name }}"
+                                                     class="me-3"
+                                                     style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-0">{{ item.menu_item.name }}</h6>
+                                                <small class="text-muted">{{ item.menu_item.description|truncatechars:50 }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <button class="btn btn-sm btn-outline-secondary me-2"
+                                                    onclick="updateQuantity({{ item.menu_item.id }}, -1)">-</button>
+                                            <span class="quantity">{{ item.quantity }}</span>
+                                            <button class="btn btn-sm btn-outline-secondary ms-2"
+                                                    onclick="updateQuantity({{ item.menu_item.id }}, 1)">+</button>
+                                        </div>
+                                    </td>
+                                    <td>${{ item.menu_item.price }}</td>
+                                    <td>${{ item.total_price }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger"
+                                                onclick="removeFromCart({{ item.menu_item.id }})">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td colspan="2"><strong>${{ cart_total }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Tax (13%):</strong></td>
+                                    <td colspan="2"><strong>${{ tax_amount }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td colspan="2"><strong>${{ total_with_tax }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Order Summary</h5>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal:</span>
+                                <span>${{ cart_total }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tax (13%):</span>
+                                <span>${{ tax_amount }}</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-4">
+                                <strong>Total:</strong>
+                                <strong>${{ total_with_tax }}</strong>
+                            </div>
+                            <!-- Modify your checkout button -->
+                            <div class="d-grid">
+                                <button onclick="checkStoreStatusAndCheckout()" class="btn btn-primary w-100">Proceed to Checkout</button>
+                            </div>
+
+                            <!-- Make sure you have this modal structure in your cart_detail.html -->
+                            <div class="modal fade" id="storeStatusModal" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Store Status</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div id="statusMessage"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                            <a href="{% url 'menu:menu_list' %}"
+                               class="btn btn-outline-secondary w-100 mt-2">
+                                Continue Shopping
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-cart-x" style="font-size: 4rem;"></i>
+                <h3 class="mt-3">Your cart is empty</h3>
+                <p>Browse our menu to add items to your cart</p>
+                <a href="{% url 'menu:menu_list' %}" class="btn btn-primary mt-3">View Menu</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+
+
+
+
+{% block extra_js %}
+<script>
+
+// Update the checkStoreStatusAndCheckout function in cart_detail.html
+function checkStoreStatusAndCheckout() {
+    // Show loading state
+    const checkoutBtn = document.querySelector('button[onclick="checkStoreStatusAndCheckout()"]');
+    const originalText = checkoutBtn.innerHTML;
+    checkoutBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+    checkoutBtn.disabled = true;
+
+    fetch('/order/check-store-status/', {  // Note the /order/ prefix
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Store status response:', data);  // Debug log
+        const modal = new bootstrap.Modal(document.getElementById('storeStatusModal'));
+        const messageDiv = document.getElementById('statusMessage');
+
+        if (data.status === 'closed') {
+            messageDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5><i class="bi bi-x-circle me-2"></i>Store is Currently Closed</h5>
+                    <p>Our store hours are from 12:00 PM to 9:00 PM. Please place your order during store hours.</p>
+                </div>`;
+            modal.show();
+        } else if (data.status === 'paused') {
+            messageDiv.innerHTML = `
+                <div class="alert alert-warning">
+                    <h5><i class="bi bi-pause-circle me-2"></i>Orders Temporarily Paused</h5>
+                    <p>We're currently experiencing high order volume. Please try again after 30 minutes.</p>
+                </div>`;
+            modal.show();
+        } else if (data.status === 'open') {
+            window.location.href = "{% url 'orders:checkout' %}";
+        }
+    })
+    .catch(error => {
+        console.error('Error checking store status:', error);
+        const modal = new bootstrap.Modal(document.getElementById('storeStatusModal'));
+        const messageDiv = document.getElementById('statusMessage');
+        messageDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <h5><i class="bi bi-exclamation-triangle me-2"></i>Error</h5>
+                <p>There was an error checking store status. Please try again.</p>
+            </div>`;
+        modal.show();
+    })
+    .finally(() => {
+        // Reset button state
+        checkoutBtn.innerHTML = originalText;
+        checkoutBtn.disabled = false;
+    });
+}
+
+// Make sure modal is properly initialized
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if Bootstrap is loaded
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap is not loaded');
+    }
+});
+function updateQuantity(itemId, delta) {
+    // Get current cart data
+    fetch('{% url "orders:get_cart" %}')
+        .then(response => response.json())
+        .then(cart => {
+            if (cart[itemId]) {
+                const newQuantity = (cart[itemId].quantity || 0) + delta;
+                if (newQuantity <= 0) {
+                    delete cart[itemId];
+                } else {
+                    cart[itemId].quantity = newQuantity;
+                }
+            }
+
+            // Save updated cart
+            return fetch('{% url "orders:save_cart" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify(cart)
+            });
+        })
+        .then(() => {
+            // Reload the page to show updated cart
+            window.location.reload();
+        });
+}
+
+function removeFromCart(itemId) {
+    fetch('{% url "orders:get_cart" %}')
+        .then(response => response.json())
+        .then(cart => {
+            delete cart[itemId];
+
+            return fetch('{% url "orders:save_cart" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify(cart)
+            });
+        })
+        .then(() => {
+            window.location.reload();
+        });
+}
+</script>
+{% endblock %}
+{% endblock %}

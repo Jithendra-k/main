@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="order-success-section section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h2 class="card-title mb-4">Order Placed Successfully!</h2>
+
+                        <div class="order-info mb-4">
+                            <h4>Order #{{ order.id }}</h4>
+                            <p class="text-muted">{{ order.created_at|date:"F j, Y, g:i a" }}</p>
+                        </div>
+
+                        <div class="pickup-info alert alert-info mb-4">
+                            <h5>Pickup Information</h5>
+                            <p><strong>Estimated Pickup Time:</strong><br>
+                               {{ order.get_estimated_pickup_time }}</p>
+                        </div>
+
+                        <!-- Inside the card-body in orders/templates/orders/order_success.html -->
+                        <div class="order-summary card mb-4">
+                            <div class="card-body">
+                                <h5>Order Summary</h5>
+                                {% for item in order.items.all %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>{{ item.menu_item.name }} × {{ item.quantity }}</span>
+                                    <span>${{ item.get_cost }}</span>
+                                </div>
+                                {% endfor %}
+
+                                <hr>
+
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Subtotal:</span>
+                                    <span>${{ order.calculate_subtotal }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Tax (13%):</span>
+                                    <span>${{ order.calculate_tax }}</span>
+                                </div>
+                                {% if order.tip_amount > 0 %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Tip:</span>
+                                    <span>${{ order.tip_amount }}</span>
+                                </div>
+                                {% endif %}
+                                {% if order.rewards_used > 0 %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Rewards Applied:</span>
+                                    <span class="text-success">-${{ order.rewards_used }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <strong>Total:</strong>
+                                    <strong>${{ order.total_amount }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-info mb-4">
+                            <h5>Payment Details</h5>
+                            <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
+                            <p><strong>Payment Status:</strong>
+                                {% if order.payment_status == 'paid' %}
+                                    <span class="badge bg-success">Paid</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Payment at Pickup</span>
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        {% if order.special_instructions %}
+                        <div class="special-instructions alert alert-secondary mb-4">
+                            <h5>Special Instructions</h5>
+                            <p>{{ order.special_instructions }}</p>
+                        </div>
+                        {% endif %}
+
+                        <div class="text-center mb-4">
+                            <p>A confirmation email has been sent to {{ order.email }}</p>
+                        </div>
+
+                        <div class="buttons">
+                            <a href="{% url 'menu:menu_list' %}" class="btn btn-primary">
+                                Order More
+                            </a>
+                            <a href="{% url 'orders:my_orders' %}" class="btn btn-outline-secondary">
+                                View My Orders
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book an Event - Royal Nepal{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Clear any existing messages immediately when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Clear django messages
+        fetch('{% url "reservations:clear_messages" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        });
+
+        // Clear session storage
+        sessionStorage.clear();
+        localStorage.removeItem('messages');
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="book-event-section section">
+    <div class="container">
+        <div class="section-title" data-aos="fade-up">
+            <h2>Book an Event</h2>
+            <p><span>Plan Your</span> <span class="description-title">Special Occasion</span></p>
+        </div>
+
+        <div class="row justify-content-center" data-aos="fade-up">
+            <div class="col-lg-8">
+                <div class="card booking-form-card">
+                    <div class="card-body p-4">
+                        <form action="{% url 'reservations:book_event' %}" method="post" class="event-form">
+                            {% csrf_token %}
+                            {% if messages and request.method == 'POST' %}
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <div class="row g-4">
+                                <!-- Event Type Selection -->
+                                <div class="col-12">
+                                    <label for="event_type" class="form-label">Event Type *</label>
+                                    <select class="form-select form-select-lg" id="event_type" name="event_type" required>
+                                        <option value="">Select event type</option>
+                                        {% for event_type in event_types %}
+                                            <option value="{{ event_type.id }}"
+                                                    data-price="{{ event_type.base_price }}"
+                                                    data-capacity="{{ event_type.max_capacity }}">
+                                                {{ event_type.name }} - Base Price: ${{ event_type.base_price }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="event-type-info" class="form-text mt-2"></div>
+                                </div>
+
+                                <!-- Contact Information -->
+                                <div class="col-md-4">
+                                    <label for="name" class="form-label">Your Name *</label>
+                                    <input type="text" class="form-control form-control-lg" id="name" name="name" required>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="email" class="form-label">Your Email *</label>
+                                    <input type="email" class="form-control form-control-lg" id="email" name="email" required>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="phone" class="form-label">Phone Number *</label>
+                                    <input type="tel" class="form-control form-control-lg" id="phone" name="phone" required>
+                                </div>
+
+                                <!-- Event Details -->
+                                <div class="col-md-4">
+                                    <label for="date" class="form-label">Event Date *</label>
+                                    <input type="date" class="form-control form-control-lg"
+                                           id="date" name="date"
+                                           min="{% now 'Y-m-d' %}" required>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="time" class="form-label">Event Time *</label>
+                                    <input type="time" class="form-control form-control-lg"
+                                           id="time" name="time" required>
+                                    <small class="form-text">Events available: 11:00 AM - 10:00 PM</small>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="guests" class="form-label">Number of Guests *</label>
+                                    <input type="number" class="form-control form-control-lg"
+                                           id="guests" name="guests"
+                                           min="1" required>
+                                    <small id="capacity-info" class="form-text"></small>
+                                </div>
+
+                                <!-- Special Requests -->
+                                <div class="col-12">
+                                    <label for="special_request" class="form-label">Special Requests</label>
+                                    <textarea class="form-control" id="special_request" name="special_request"
+                                              rows="4" placeholder="Any special requirements or preferences?"></textarea>
+                                </div>
+
+                                <!-- Price Summary -->
+                                <div class="col-12">
+                                    <div class="price-summary card bg-light">
+                                        <div class="card-body">
+                                            <h5 class="mb-3">Price Summary</h5>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>Base Price:</span>
+                                                <span id="base-price">$0.00</span>
+                                            </div>
+                                            <hr>
+                                            <div class="d-flex justify-content-between">
+                                                <strong>Total Amount:</strong>
+                                                <strong id="total-price">$0.00</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <div class="col-12 text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg px-5">Book Event</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% block extra_css %}
+<style>
+.book-event-section {
+    background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)),
+                url('{% static "img/events-bg.jpg" %}') center center;
+    background-attachment: fixed;
+    background-size: cover;
+    padding: 80px 0;
+}
+
+.booking-form-card {
+    border: none;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+}
+
+.form-control, .form-select {
+    border: 1px solid #dee2e6;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #ce1212;
+    box-shadow: 0 0 0 0.2rem rgba(206, 18, 18, 0.25);
+}
+
+.price-summary {
+    border-radius: 10px;
+    border: none;
+}
+
+.btn-primary {
+    background-color: #ce1212;
+    border-color: #ce1212;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+}
+
+.btn-primary:hover {
+    background-color: #b31010;
+    border-color: #b31010;
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const eventTypeSelect = document.getElementById('event_type');
+    const guestsInput = document.getElementById('guests');
+    const capacityInfo = document.getElementById('capacity-info');
+    const eventTypeInfo = document.getElementById('event-type-info');
+    const basePriceSpan = document.getElementById('base-price');
+    const totalPriceSpan = document.getElementById('total-price');
+
+    function updatePriceAndCapacity() {
+        const selectedOption = eventTypeSelect.selectedOptions[0];
+        if (selectedOption.value) {
+            const basePrice = parseFloat(selectedOption.dataset.price);
+            const maxCapacity = parseInt(selectedOption.dataset.capacity);
+            const description = selectedOption.textContent.split('-')[0].trim();
+
+            // Update capacity info
+            capacityInfo.textContent = `Maximum capacity: ${maxCapacity} guests`;
+            guestsInput.max = maxCapacity;
+
+            // Update event type info
+            eventTypeInfo.textContent = `${description} - Perfect for your special occasion`;
+
+            // Update price display
+            basePriceSpan.textContent = `$${basePrice.toFixed(2)}`;
+            totalPriceSpan.textContent = `$${basePrice.toFixed(2)}`;
+        } else {
+            capacityInfo.textContent = '';
+            eventTypeInfo.textContent = '';
+            basePriceSpan.textContent = '$0.00';
+            totalPriceSpan.textContent = '$0.00';
+        }
+    }
+
+    eventTypeSelect.addEventListener('change', updatePriceAndCapacity);
+    updatePriceAndCapacity();
+
+    // Time input validation
+    const timeInput = document.getElementById('time');
+    timeInput.addEventListener('change', function() {
+        const time = this.value;
+        const hour = parseInt(time.split(':')[0]);
+        if (hour < 11 || hour >= 22) {
+            alert('Please select a time between 11:00 AM and 10:00 PM');
+            this.value = '';
+        }
+    });
+});
+</script>
+{% endblock %}

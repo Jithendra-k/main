@@ -1,0 +1,22 @@
+<!-- core/templates/core/sections/hero.html -->
+{% load static %}
+
+<section id="hero" class="hero section light-background">
+    <div class="container">
+        <div class="row gy-4 justify-content-center justify-content-lg-between">
+            <div class="col-lg-5 order-2 order-lg-1 d-flex flex-column justify-content-center">
+                <h1 data-aos="fade-up">Enjoy Your Healthy<br>Delicious Food</h1>
+                <p data-aos="fade-up" data-aos-delay="100">Experience authentic Nepali cuisine in the heart of the city</p>
+                <div class="d-flex" data-aos="fade-up" data-aos-delay="200">
+                    <a href="{% url 'menu:menu_list' %}" class="btn-get-started">Order Online</a>
+                    <a href="https://www.youtube.com/watch?v=n9QqgoQHLx4&t=10s&ab_channel=KoreanHusbandHongKongWife" class="glightbox btn-watch-video d-flex align-items-center">
+                        <i class="bi bi-play-circle"></i><span>Watch Video</span>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 order-1 order-lg-2 hero-img" data-aos="zoom-out">
+                <img src="{% static 'img/hero-img.png' %}" class="img-fluid animated" alt="">
+            </div>
+        </div>
+    </div>
+</section>

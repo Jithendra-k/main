@@ -1,0 +1,151 @@
+<!-- menu/templates/menu/menu_section.html -->
+{% load static %}
+
+<section id="menu" class="menu section">
+    <div class="container section-title" data-aos="fade-up">
+        <h2>Our Menu</h2>
+        <p><span>Check Our</span> <span class="description-title">Nepali Delicacies</span></p>
+    </div>
+
+    <div class="container">
+        <!-- Menu Navigation -->
+        <ul class="nav nav-tabs d-flex justify-content-center" data-aos="fade-up" data-aos-delay="100">
+            {% for category in categories %}
+                <li class="nav-item">
+                    <a class="nav-link {% if forloop.first %}active show{% endif %}"
+                       data-bs-toggle="tab"
+                       data-bs-target="#menu-{{ category.slug }}">
+                        <h4>{{ category.name }}</h4>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <!-- Menu Content -->
+        <div class="tab-content" data-aos="fade-up" data-aos-delay="200">
+            {% for category in categories %}
+                <div class="tab-pane fade {% if forloop.first %}active show{% endif %}"
+                     id="menu-{{ category.slug }}">
+                    <div class="tab-header text-center">
+                        <p>Menu</p>
+                        <h3>{{ category.name }}</h3>
+                    </div>
+
+                    <div class="row gy-5">
+                        {% for item in category.items.all %}
+                            {% if item.is_available %}
+                                <div class="col-lg-4 menu-item">
+                                    <div class="card h-100">
+                                        {% if item.image %}
+                                            <a href="{{ item.image.url }}" class="glightbox">
+                                                <img src="{{ item.image.url }}"
+                                                     class="card-img-top menu-img"
+                                                     alt="{{ item.name }}">
+                                            </a>
+                                        {% else %}
+                                            <img src="{% static 'img/default-food.jpg' %}"
+                                                 class="card-img-top menu-img"
+                                                 alt="{{ item.name }}">
+                                        {% endif %}
+
+                                        <div class="card-body">
+                                            <h4 class="card-title">{{ item.name }}</h4>
+                                            <p class="ingredients">{{ item.description }}</p>
+                                            {% if item.spice_level != 'mild' %}
+                                                <div class="spice-level mb-2">
+                                                    <span class="badge {% if item.spice_level == 'very_spicy' %}bg-danger{% elif item.spice_level == 'spicy' %}bg-warning{% else %}bg-info{% endif %}">
+                                                        {{ item.get_spice_level_display }}
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <p class="price mb-0">${{ item.price }}</p>
+                                                <button class="btn btn-primary btn-sm"
+                                                        onclick="quickAddToCart({{ item.id }}, '{{ item.name }}', {{ item.price }})">
+                                                    Add to Cart
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'menu:menu_list' %}" class="btn btn-primary btn-lg">View Full Menu</a>
+        </div>
+    </div>
+</section>
+
+{% block extra_css %}
+<style>
+    .menu-img {
+        height: 200px;
+        object-fit: cover;
+    }
+    .card {
+        transition: transform 0.2s;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .price {
+        color: #ce1212;
+        font-size: 24px;
+        font-weight: 700;
+    }
+    .ingredients {
+        font-style: italic;
+        font-size: 14px;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function quickAddToCart(itemId, itemName, price) {
+    // Get existing cart from session
+    fetch('{% url "orders:get_cart" %}')
+        .then(response => response.json())
+        .then(cart => {
+            // Update cart
+            if (cart[itemId]) {
+                cart[itemId].quantity += 1;
+            } else {
+                cart[itemId] = {
+                    name: itemName,
+                    price: price,
+                    quantity: 1
+                };
+            }
+
+            // Save updated cart
+            return fetch('{% url "orders:save_cart" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify(cart)
+            });
+        })
+        .then(() => {
+            // Show success notification
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-success position-fixed top-0 end-0 m-3';
+            notification.style.zIndex = '1050';
+            notification.textContent = `Added ${itemName} to cart`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        })
+        .catch(error => console.error('Error:', error));
+}
+</script>
+{% endblock %}

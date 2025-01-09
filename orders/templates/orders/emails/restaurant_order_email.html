@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>New Pickup Order - Royal Nepal Restaurant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3, h4 {
+            color: #ce1212;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .urgent {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .payment-info {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .total {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>New Pickup Order - Order #{{ order.id }}</h2>
+        <p class="urgent">New order requires immediate attention!</p>
+
+        <div class="order-details">
+            <h3>Customer Information:</h3>
+            <p><strong>Name:</strong> {{ order.name }}</p>
+            <p><strong>Phone:</strong> {{ order.phone }}</p>
+            <p><strong>Email:</strong> {{ order.email }}</p>
+
+            <div class="payment-info">
+                <h4>Payment Information</h4>
+                <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
+                <p><strong>Payment Status:</strong> {% if order.payment_status == 'paid' %}Paid{% else %}Payment Pending{% endif %}</p>
+                {% if order.payment_method == 'in_store' %}
+                <p class="urgent">Customer will pay at pickup</p>
+                {% endif %}
+            </div>
+
+            <h3>Order Details:</h3>
+            <table>
+                <tr>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+                {% for item in order.items.all %}
+                <tr>
+                    <td>{{ item.menu_item.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ item.price }}</td>
+                    <td>${{ item.get_cost }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            <table class="total-table" style="margin-top: 20px; width: 300px; float: right;">
+                <tr>
+                    <td class="total">Subtotal:</td>
+                    <td class="total" style="text-align: right;">${{ order.calculate_subtotal }}</td>
+                </tr>
+                <tr>
+                    <td class="total">Tax (13%):</td>
+                    <td class="total" style="text-align: right;">${{ order.calculate_tax }}</td>
+                </tr>
+                {% if order.tip_amount > 0 %}
+                <tr>
+                    <td class="total">Tip:</td>
+                    <td class="total" style="text-align: right;">${{ order.tip_amount }}</td>
+                </tr>
+                {% endif %}
+                {% if order.rewards_used > 0 %}
+                <tr>
+                    <td>Rewards Applied:</td>
+                    <td style="text-align: right; color: #198754;">-${{ order.rewards_used }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td style="font-weight: bold;">Total:</td>
+                    <td style="text-align: right; font-weight: bold;">${{ order.total_amount }}</td>
+                </tr>
+            </table>
+        </div>
+
+        {% if order.special_instructions %}
+        <div class="special-instructions">
+            <h3>Special Instructions:</h3>
+            <p>{{ order.special_instructions }}</p>
+        </div>
+        {% endif %}
+
+        <p class="urgent">Please start preparing this order for pickup!</p>
+
+        <div class="order-actions" style="margin-top: 20px;">
+            <p>Update order status at: <a href="{{ admin_url }}/orders/order/{{ order.id }}/change/">Admin Panel</a></p>
+        </div>
+    </div>
+</body>
+</html>

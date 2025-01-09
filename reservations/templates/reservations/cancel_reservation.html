@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title text-center mb-4">Cancel {% if is_event %}Event Booking{% else %}Table Reservation{% endif %}</h3>
+                        
+                        {% if is_event %}
+                            <div class="event-details mb-4">
+                                <p><strong>Event Type:</strong> {{ booking.event_type.name }}</p>
+                                <p><strong>Date:</strong> {{ booking.date|date:"F j, Y" }}</p>
+                                <p><strong>Time:</strong> {{ booking.time|time:"g:i A" }}</p>
+                                <p><strong>Guests:</strong> {{ booking.guests }}</p>
+                                <p><strong>Total Amount:</strong> ${{ booking.total_amount }}</p>
+                            </div>
+                            <div class="alert alert-info">
+                                <h5 class="alert-heading">Cancellation Policy</h5>
+                                <ul class="mb-0">
+                                    <li>Full refund (100%) if cancelled 24 hours or more before the event</li>
+                                    <li>25% refund if cancelled between 24 hours and 3 hours before the event</li>
+                                    <li>No refund for cancellations less than 3 hours before the event</li>
+                                </ul>
+                            </div>
+                        {% else %}
+                            <div class="reservation-details mb-4">
+                                <p><strong>Date:</strong> {{ reservation.date|date:"F j, Y" }}</p>
+                                <p><strong>Time:</strong> {{ reservation.time|time:"g:i A" }}</p>
+                                <p><strong>Guests:</strong> {{ reservation.guests }}</p>
+                            </div>
+                            <div class="alert alert-info">
+                                <h5 class="alert-heading">Cancellation Policy</h5>
+                                <p class="mb-0">Table reservations can be cancelled free of charge up to 3 hours before the reserved time.</p>
+                            </div>
+                        {% endif %}
+
+                        <div class="alert alert-warning">
+                            <h5>Are you sure you want to cancel this {% if is_event %}event booking{% else %}table reservation{% endif %}?</h5>
+                            {% if is_event %}
+                                <p>Refund will be processed according to the cancellation policy.</p>
+                            {% endif %}
+                        </div>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-danger">Yes, Cancel {% if is_event %}Event{% else %}Reservation{% endif %}</button>
+                                <a href="{% url 'reservations:my_reservations' %}" class="btn btn-secondary">No, Keep {% if is_event %}Event{% else %}Reservation{% endif %}</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

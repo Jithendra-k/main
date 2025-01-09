@@ -1,0 +1,222 @@
+<!-- templates/includes/announcement_popup.html -->
+{% if announcement %}
+<div class="modal fade" id="announcementPopup" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content restaurant-theme">
+            <!-- Close button -->
+            <button type="button" class="custom-close" data-bs-dismiss="modal">×</button>
+            
+            <div class="modal-body p-0">
+                <div class="announcement-content text-center">
+                    <div class="decorative-border">
+                        {% if announcement.image %}
+                            <div class="image-container">
+                                <img src="{{ announcement.image.url }}" alt="Announcement" class="announcement-image">
+                            </div>
+                        {% endif %}
+                        
+                        <div class="text-content">
+                            <h2 class="announcement-title">{{ announcement.title }}</h2>
+                            <div class="stars">
+                                <span>★</span>
+                                <span>★</span>
+                                <span>★</span>
+                                <span>★</span>
+                                <span>★</span>
+                            </div>
+                            <div class="announcement-message">
+                                {{ announcement.message|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Restaurant Theme Styling */
+.restaurant-theme {
+    background: linear-gradient(135deg, #fff5e6 0%, #fff 100%);
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+    color: #333;
+    position: relative;
+}
+
+/* Decorative Border */
+.decorative-border {
+    border: 2px solid #ce1212;
+    margin: 20px;
+    padding: 30px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    position: relative;
+}
+
+.decorative-border::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    border: 1px solid #ce1212;
+    border-radius: 20px;
+    z-index: -1;
+    opacity: 0.3;
+}
+
+/* Content Styling */
+.announcement-content {
+    position: relative;
+    z-index: 1;
+    padding: 1rem;
+}
+
+.image-container {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 2rem;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.announcement-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.image-container:hover .announcement-image {
+    transform: scale(1.05);
+}
+
+.announcement-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #ce1212;
+    margin-bottom: 1rem;
+    font-family: 'Amatic SC', cursive;
+    text-transform: uppercase;
+}
+
+.stars {
+    color: #ffd700;
+    font-size: 24px;
+    letter-spacing: 5px;
+    margin: 15px 0;
+    animation: sparkle 2s infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+.announcement-message {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    margin: 1.5rem 0;
+    color: #444;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Close Button */
+.custom-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(206, 18, 18, 0.1);
+    border: none;
+    color: #ce1212;
+    font-size: 24px;
+    z-index: 2;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.custom-close:hover {
+    background: rgba(206, 18, 18, 0.2);
+    transform: rotate(90deg);
+}
+
+/* Animation */
+.modal.fade .modal-dialog {
+    transform: scale(0.7);
+    opacity: 0;
+    transition: all 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .announcement-content {
+        padding: 1rem;
+    }
+    
+    .decorative-border {
+        margin: 10px;
+        padding: 15px;
+    }
+    
+    .announcement-title {
+        font-size: 2rem;
+    }
+    
+    .announcement-message {
+        font-size: 1.1rem;
+    }
+    
+    .image-container {
+        width: 150px;
+        height: 150px;
+    }
+}
+
+/* Additional Decorative Elements */
+.announcement-content::before,
+.announcement-content::after {
+    content: '❖';
+    position: absolute;
+    color: #ce1212;
+    opacity: 0.2;
+    font-size: 24px;
+}
+
+.announcement-content::before {
+    top: 10px;
+    left: 10px;
+}
+
+.announcement-content::after {
+    bottom: 10px;
+    right: 10px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Only show popup if user came directly to home page (not through navigation)
+    if (document.referrer === '' || !document.referrer.includes(window.location.host)) {
+        const modal = new bootstrap.Modal(document.getElementById('announcementPopup'));
+        modal.show();
+    }
+});
+</script>
+{% endif %}

@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title text-center mb-4">
+                            Update {% if is_event %}Event Booking{% else %}Table Reservation{% endif %}
+                        </h3>
+
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if is_event %}
+                            <!-- Event Type Info (Non-editable) -->
+                            <div class="event-info mb-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Event Details</h5>
+                                        <p><strong>Event Type:</strong> {{ reservation.event_type.name }}</p>
+                                        <p><strong>Base Price:</strong> ${{ reservation.event_type.base_price }}</p>
+                                        <p><strong>Maximum Capacity:</strong> {{ reservation.event_type.max_capacity }} guests</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row g-3">
+                                <!-- Contact Information (Non-editable) -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" class="form-control" value="{{ reservation.name }}" disabled>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" value="{{ reservation.email }}" disabled>
+                                </div>
+
+                                <!-- Editable Fields -->
+                                <div class="col-md-4">
+                                    <label for="date" class="form-label">Date *</label>
+                                    <input type="date"
+                                           class="form-control"
+                                           id="date"
+                                           name="date"
+                                           value="{{ reservation.date|date:'Y-m-d' }}"
+                                           min="{{ min_date }}"
+                                           required>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="time" class="form-label">Time *</label>
+                                    <input type="time"
+                                           class="form-control"
+                                           id="time"
+                                           name="time"
+                                           value="{{ reservation.time|time:'H:i' }}"
+                                           required>
+                                    <small class="form-text">Available: 11:00 AM - 10:00 PM</small>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="guests" class="form-label">Number of Guests *</label>
+                                    <input type="number"
+                                           class="form-control"
+                                           id="guests"
+                                           name="guests"
+                                           value="{{ reservation.guests }}"
+                                           min="1"
+                                           {% if is_event %}max="{{ reservation.event_type.max_capacity }}"{% endif %}
+                                           required>
+                                    {% if is_event %}
+                                        <small class="form-text">Maximum: {{ reservation.event_type.max_capacity }} guests</small>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="special_request" class="form-label">Special Requests</label>
+                                    <textarea class="form-control"
+                                              id="special_request"
+                                              name="special_request"
+                                              rows="4">{{ reservation.special_request }}</textarea>
+                                </div>
+
+                                {% if is_event %}
+                                    <div class="col-12">
+                                        <div class="alert alert-info">
+                                            <p class="mb-0"><strong>Note:</strong> Event type and pricing cannot be modified.
+                                                If you need to change these, please cancel this booking and create a new one.</p>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="col-12">
+                                    <div class="alert alert-warning">
+                                        <p class="mb-0"><i class="bi bi-info-circle me-2"></i>
+                                            Modifications are allowed up to 3 hours before the scheduled time.</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg px-5">Update Reservation</button>
+                                    <a href="{% url 'reservations:my_reservations' %}" class="btn btn-secondary btn-lg px-5 ms-2">Cancel</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Time input validation
+    const timeInput = document.getElementById('time');
+    timeInput.addEventListener('change', function() {
+        const time = this.value;
+        const hour = parseInt(time.split(':')[0]);
+        if (hour < 11 || hour >= 22) {
+            alert('Please select a time between 11:00 AM and 10:00 PM');
+            this.value = '{{ reservation.time|time:"H:i" }}';
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-control:disabled {
+    background-color: #f8f9fa;
+    opacity: 0.8;
+}
+.card {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: 15px;
+}
+.btn-lg {
+    padding: 12px 30px;
+}
+</style>
+{% endblock %}
+{% endblock %}

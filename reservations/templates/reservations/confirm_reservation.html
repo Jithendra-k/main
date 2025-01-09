@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="confirmation-section section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body text-center p-5">
+                        <div class="confirmation-icon mb-4">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                        </div>
+
+                        <h2 class="mb-4">Table Reserved Successfully!</h2>
+                        <p class="text-muted mb-4">A confirmation email has been sent to {{ reservation.email }}</p>
+
+                        <div class="reservation-details card bg-light mb-4">
+                            <div class="card-body">
+                                <h4 class="card-title text-primary mb-4">Reservation Details</h4>
+
+                                <div class="row text-start">
+                                    <div class="col-md-6">
+                                        <p><strong>Reservation ID:</strong> #{{ reservation.id }}</p>
+                                        <p><strong>Name:</strong> {{ reservation.name }}</p>
+                                        <p><strong>Email:</strong> {{ reservation.email }}</p>
+                                        <p><strong>Phone:</strong> {{ reservation.phone }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Date:</strong> {{ reservation.date|date:"F j, Y" }}</p>
+                                        <p><strong>Time:</strong> {{ reservation.time|time:"g:i A" }}</p>
+                                        <p><strong>Guests:</strong> {{ reservation.guests }}</p>
+                                        {% if reservation.special_request %}
+                                            <p><strong>Special Requests:</strong> {{ reservation.special_request }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cancellation-info alert alert-info mb-4">
+                            <p class="mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                You can modify or cancel your reservation up to 3 hours before the scheduled time.
+                            </p>
+                        </div>
+
+                        <div class="action-buttons">
+                            <a href="{% url 'reservations:my_reservations' %}" class="btn btn-primary me-2">View My Reservations</a>
+                            <a href="{% url 'core:home' %}" class="btn btn-outline-secondary">Return to Home</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% block extra_css %}
+<style>
+.confirmation-section {
+    padding: 80px 0;
+    background-color: #f8f9fa;
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+}
+
+.confirmation-icon {
+    color: #28a745;
+}
+
+.reservation-details {
+    background: #f8f9fa;
+    border: none;
+}
+
+.btn {
+    padding: 12px 30px;
+    border-radius: 50px;
+}
+
+.btn-primary {
+    background-color: #ce1212;
+    border-color: #ce1212;
+}
+
+.btn-primary:hover {
+    background-color: #b31010;
+    border-color: #b31010;
+}
+</style>
+{% endblock %}
+{% endblock %}

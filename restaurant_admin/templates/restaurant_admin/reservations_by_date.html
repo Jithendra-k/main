@@ -1,0 +1,146 @@
+{% extends 'restaurant_admin/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3>Reservations <small class="text-muted">({{ selected_date|date:"F d, Y" }})</small></h3>
+        <div class="d-flex gap-2">
+            <form class="d-flex" method="get">
+                <input type="date" name="date" class="form-control me-2"
+                       value="{{ selected_date|date:'Y-m-d' }}">
+                <button type="submit" class="btn btn-primary">View</button>
+            </form>
+            <button class="btn btn-success" data-bs-toggle="modal"
+                    data-bs-target="#addReservationModal">
+                <i class="bi bi-plus"></i> Add Reservation
+            </button>
+            <a href="{% url 'restaurant_admin:dashboard' %}"
+               class="btn btn-secondary">
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Guests</th>
+                        <th>Status</th>
+                        <th>Arrival</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reservation in reservations %}
+                    <tr>
+                        <td>{{ reservation.time|time:"H:i" }}</td>
+                        <td>{{ reservation.name }}</td>
+                        <td>{{ reservation.phone }}</td>
+                        <td>{{ reservation.guests }}</td>
+                        <td>
+                            <span class="badge {% if reservation.status == 'pending' %}bg-warning
+                                {% elif reservation.status == 'confirmed' %}bg-success
+                                {% elif reservation.status == 'rejected' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ reservation.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm arrival-status-select"
+                                    data-reservation-id="{{ reservation.id }}"
+                                    {% if reservation.status != 'confirmed' %}disabled{% endif %}>
+                                <option value="not_arrived" {% if reservation.arrival_status == 'not_arrived' %}selected{% endif %}>
+                                    Not Arrived
+                                </option>
+                                <option value="seated" {% if reservation.arrival_status == 'seated' %}selected{% endif %}>
+                                    Seated
+                                </option>
+                                <option value="no_show" {% if reservation.arrival_status == 'no_show' %}selected{% endif %}>
+                                    No Show
+                                </option>
+                            </select>
+                        </td>
+                        <td>
+                            {% if reservation.status == 'pending' and not reservation.is_manual_entry %}
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-success dropdown-toggle"
+                                        data-bs-toggle="dropdown">
+                                    Approve
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item approve-btn"
+                                       href="#"
+                                       data-reservation-id="{{ reservation.id }}"
+                                       data-action="approve">Yes, Approve</a>
+                                    <a class="dropdown-item reject-btn"
+                                       href="#"
+                                       data-reservation-id="{{ reservation.id }}"
+                                       data-action="reject">No, Reject</a>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Include the Add Reservation Modal here -->
+
+{% block extra_js %}
+<script>
+// Add your JavaScript for handling approvals and arrival status updates
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle approval/rejection
+    document.querySelectorAll('.approve-btn, .reject-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const reservationId = this.dataset.reservationId;
+            const action = this.dataset.action;
+
+            updateReservationStatus(reservationId, action);
+        });
+    });
+
+    // Handle arrival status changes
+    document.querySelectorAll('.arrival-status-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const reservationId = this.dataset.reservationId;
+            const arrivalStatus = this.value;
+            updateReservationStatus(reservationId, 'update_arrival', arrivalStatus);
+        });
+    });
+
+    function updateReservationStatus(reservationId, action, arrivalStatus = null) {
+        const formData = new FormData();
+        formData.append('action', action);
+        if (arrivalStatus) {
+            formData.append('arrival_status', arrivalStatus);
+        }
+
+        fetch(`/restaurant-admin/reservation/${reservationId}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

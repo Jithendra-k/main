@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="alert alert-info">
+                <h4>Complete Your Profile</h4>
+                <p>Fill out your details to personalize your account and unlock special benefits!</p>
+                <ul>
+                    <li>🎂 Get a <strong>50% OFF</strong> discount on your birthday</li>
+                    <li>Enable personalized recommendations</li>
+                    <li>Easier order tracking</li>
+                </ul>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">Update Profile Information</div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="update_profile" value="1">
+
+                        {% if user_form.errors or profile_form.errors %}
+                            <div class="alert alert-danger">
+                                Please correct the errors below.
+                            </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name</label>
+                                {{ user_form.first_name }}
+                                {% if user_form.first_name.errors %}
+                                    <div class="text-danger">
+                                        {{ user_form.first_name.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                {{ user_form.last_name }}
+                                {% if user_form.last_name.errors %}
+                                    <div class="text-danger">
+                                        {{ user_form.last_name.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            {{ user_form.email }}
+                            {% if user_form.email.errors %}
+                                <div class="text-danger">
+                                    {{ user_form.email.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number</label>
+                            {{ profile_form.phone_number }}
+                            <small class="form-text text-muted">Optional: Help us contact you about orders</small>
+                            {% if profile_form.phone_number.errors %}
+                                <div class="text-danger">
+                                    {{ profile_form.phone_number.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Birthday</label>
+                            {{ profile_form.birthday }}
+                            <small class="form-text text-muted">🎂 Get a 50% OFF discount on your birthday!</small>
+                            {% if profile_form.birthday.errors %}
+                                <div class="text-danger">
+                                    {{ profile_form.birthday.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            {{ profile_form.address }}
+                            <small class="form-text text-muted">Optional: For easier delivery</small>
+                            {% if profile_form.address.errors %}
+                                <div class="text-danger">
+                                    {{ profile_form.address.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Rest of the password change section remains the same -->
+
+            <div class="card">
+                <div class="card-header">Change Password</div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="change_password" value="1">
+
+                        {% if password_form.errors %}
+                            <div class="alert alert-danger">
+                                Please correct the errors below.
+                            </div>
+                        {% endif %}
+
+                        {% for field in password_form %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="text-danger">
+                                        {{ field.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <button type="submit" class="btn btn-danger">Change Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

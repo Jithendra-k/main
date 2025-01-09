@@ -1,0 +1,102 @@
+<!-- reservations/templates/reservations/emails/event_confirmation.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Event Booking Confirmation - Royal Nepal Restaurant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3 {
+            color: #ce1212;
+        }
+        .event-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .payment-info {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .policy {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ce1212;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Event Booking Confirmation</h2>
+        <p>Dear {{ booking.name }},</p>
+        <p>Thank you for choosing Royal Nepal Restaurant for your special event. Your booking has been confirmed!</p>
+
+        <div class="event-details">
+            <h3>Event Details</h3>
+            <p><strong>Booking ID:</strong> #{{ booking.id }}</p>
+            <p><strong>Event Type:</strong> {{ booking.event_type.name }}</p>
+            <p><strong>Date:</strong> {{ booking.date|date:"F j, Y" }}</p>
+            <p><strong>Time:</strong> {{ booking.time|time:"g:i A" }}</p>
+            <p><strong>Number of Guests:</strong> {{ booking.guests }}</p>
+            {% if booking.special_request %}
+                <p><strong>Special Requests:</strong> {{ booking.special_request }}</p>
+            {% endif %}
+        </div>
+
+        <div class="payment-info">
+            <h3>Payment Information</h3>
+            <p><strong>Total Amount:</strong> <span class="total">${{ booking.total_amount }}</span></p>
+            <p><strong>Payment Status:</strong> {{ booking.get_payment_status_display }}</p>
+            {% if booking.payment_status == 'pending' %}
+                <p><em>Please complete your payment to secure your booking.</em></p>
+            {% endif %}
+        </div>
+
+        <div class="location">
+            <h3>Location</h3>
+            <p>Royal Nepal Restaurant</p>
+            <p>123 Restaurant Street</p>
+            <p>City, State 12345</p>
+            <p>Phone: (555) 123-4567</p>
+        </div>
+
+        <div class="policy">
+            <p><strong>Event Booking Policy:</strong></p>
+            <ul>
+                <li>You can modify or cancel your booking up to 3 hours before the scheduled time.</li>
+                <li>For cancellations made more than 24 hours before the event, a full refund will be provided.</li>
+                <li>For cancellations made between 24 and 3 hours before the event, a 50% refund will be provided.</li>
+                <li>No refunds are available for cancellations made less than 3 hours before the event.</li>
+            </ul>
+        </div>
+
+        <p>If you have any questions or need to make changes to your booking, please don't hesitate to contact us.</p>
+
+        <p>Best regards,<br>
+        Royal Nepal Restaurant Team</p>
+    </div>
+</body>
+</html>
