@@ -55,8 +55,8 @@
                             <thead>
                                 <tr>
                                     <th>Title</th>
-                                    <th>Active Period</th>
-                                    <th>Frequency</th>
+                                    <th>Active Till</th>
+{#                                    <th>Frequency</th>#}
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -66,10 +66,10 @@
                                 <tr>
                                     <td>{{ announcement.title }}</td>
                                     <td>
-                                        {{ announcement.start_date|date:"M d, Y" }} -
+{#                                        {{ announcement.start_date|date:"M d, Y" }} -#}
                                         {{ announcement.end_date|date:"M d, Y" }}
                                     </td>
-                                    <td>{{ announcement.get_frequency_display }}</td>
+{#                                    <td>{{ announcement.get_frequency_display }}</td>#}
                                     <td>
                                         <span class="badge {% if announcement.is_active %}bg-success{% else %}bg-secondary{% endif %}">
                                             {{ announcement.is_active|yesno:"Active,Inactive" }}
