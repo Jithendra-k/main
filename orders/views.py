@@ -1,4 +1,5 @@
 # orders/views.py
+from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -174,7 +175,7 @@ def checkout(request):
     store_status = StoreStatus.get_current_status()
     current_time = timezone.localtime()
 
-    # Check store status first
+    # Store status checks (keeping your existing checks)
     if store_status == 'closed':
         messages.error(request, 'Store is currently closed.')
         return redirect('orders:cart_detail')
@@ -188,12 +189,10 @@ def checkout(request):
         messages.warning(request, 'Your cart is empty!')
         return redirect('menu:menu_list')
 
-    # Calculate cart totals
-    cart_items = []
-    cart_total = Decimal('0.00')
-
     try:
-        # Process items and calculate totals
+        # Calculate cart totals (keeping your existing calculation)
+        cart_items = []
+        cart_total = Decimal('0.00')
         for item_id, item_data in cart.items():
             menu_item = get_object_or_404(MenuItem, id=item_id)
             quantity = item_data.get('quantity', 0)
@@ -205,20 +204,29 @@ def checkout(request):
                 'total_price': total_price
             })
 
-        # Calculate tax and final total
         tax_rate = Decimal('0.13')
         tax_amount = cart_total * tax_rate
         total_with_tax = cart_total + tax_amount
 
         if request.method == 'POST':
-            # Handle JSON requests (for online payments)
+            # Handle JSON requests (online payments)
             if request.content_type == 'application/json':
                 data = json.loads(request.body)
                 tip_amount = Decimal(str(data.get('tip_amount', '0')))
-                rewards_amount = Decimal(str(data.get('rewards_amount', '0'))) if data.get('use_rewards') else Decimal('0')
-                final_total = total_with_tax + tip_amount - rewards_amount
 
-                # Create payment intent only
+                # Handle rewards for online payment
+                rewards_used = Decimal('0')
+                if data.get('use_rewards'):
+                    rewards_amount = Decimal(str(data.get('rewards_amount', '0')))
+                    if rewards_amount > request.user.profile.rewards_balance:
+                        return JsonResponse({
+                            'error': 'Insufficient rewards balance'
+                        }, status=400)
+                    rewards_used = rewards_amount
+
+                final_total = total_with_tax + tip_amount - rewards_used
+
+                # Create payment intent with updated metadata
                 intent = stripe.PaymentIntent.create(
                     amount=int(final_total * 100),
                     currency='usd',
@@ -230,7 +238,7 @@ def checkout(request):
                             'quantity': item['quantity']
                         } for item in cart_items]),
                         'tip_amount': str(tip_amount),
-                        'rewards_used': str(rewards_amount),
+                        'rewards_used': str(rewards_used),
                         'user_id': str(request.user.id),
                         'customer_name': data.get('name'),
                         'phone': data.get('phone'),
@@ -243,9 +251,21 @@ def checkout(request):
                     'amount': float(final_total)
                 })
 
-            # Handle regular form submission (for pay at pickup)
+            # Handle regular form submission (pay at pickup)
             else:
-                # Create order directly for pay at pickup
+                # Get rewards amount if being used
+                rewards_used = Decimal('0')
+                if request.POST.get('use_rewards'):
+                    rewards_amount = Decimal(request.POST.get('rewards_amount', '0'))
+                    if rewards_amount > request.user.profile.rewards_balance:
+                        messages.error(request, 'Insufficient rewards balance')
+                        return redirect('orders:checkout')
+                    rewards_used = rewards_amount
+
+                tip_amount = Decimal(request.POST.get('tip_amount', '0'))
+                final_total = total_with_tax + tip_amount - rewards_used
+
+                # Create order
                 order = Order.objects.create(
                     user=request.user,
                     name=request.POST.get('name'),
@@ -253,9 +273,9 @@ def checkout(request):
                     phone=request.POST.get('phone'),
                     payment_method='in_store',
                     special_instructions=request.POST.get('special_instructions', ''),
-                    tip_amount=Decimal(request.POST.get('tip_amount', '0')),
-                    total_amount=total_with_tax,
-                    rewards_used=Decimal(request.POST.get('rewards_amount', '0')) if request.POST.get('use_rewards') else Decimal('0'),
+                    tip_amount=tip_amount,
+                    total_amount=final_total,
+                    rewards_used=rewards_used,
                     status='pending',
                     payment_status='pending'
                 )
@@ -269,14 +289,33 @@ def checkout(request):
                         price=item['menu_item'].price
                     )
 
-                # Apply rewards if used
-                if request.POST.get('use_rewards'):
-                    rewards_amount = Decimal(request.POST.get('rewards_amount', '0'))
-                    if rewards_amount > 0:
-                        request.user.profile.use_rewards(rewards_amount)
 
-                # Clear cart
+                profile = request.user.profile
+                profile.rewards_balance -= rewards_used
+                profile.save()
+
+                # Calculate and save points earned (based on amount paid without rewards)
+                points_earned = int(((final_total + rewards_used) / Decimal('100.00')) * 1000)
+                order.points_earned = points_earned
+
+                order.save()
+
+                # Clear cart and continue with your existing notification logic
                 request.session['cart'] = {}
+
+                # Send admin notification (keeping your existing notification code)
+                try:
+                    notify_admin("new_order", {
+                        "id": order.id,
+                        "time": order.created_at.strftime("%H:%M"),
+                        "total": str(order.total_amount),
+                        "status": order.get_status_display(),
+                        "customer_name": order.name,
+                        "items_count": order.items.count(),
+                        "payment_method": order.get_payment_method_display()
+                    })
+                except Exception as e:
+                    print(f"Error sending notification to admin: {e}")
 
                 # Send confirmation email
                 try:
@@ -287,7 +326,7 @@ def checkout(request):
                 messages.success(request, 'Order placed successfully! Please pay at pickup.')
                 return redirect('orders:order_success', order_id=order.id)
 
-        # For GET requests, render the checkout page
+        # GET request - render checkout page
         context = {
             'cart_items': cart_items,
             'cart_total': cart_total,
@@ -306,6 +345,19 @@ def checkout(request):
 def my_orders(request):
     # Get all orders first
     order_list = Order.objects.filter(user=request.user).order_by('-created_at')
+
+    # Calculate totals with proper decimal formatting
+    total_spent = Decimal(str(order_list.aggregate(total=Sum('total_amount'))['total'] or '0')).quantize(
+        Decimal('0.01'))
+
+    # Calculate points correctly ($1 = 10 points)
+    total_points_earned = 0
+    for order in order_list:
+        if order.status == 'completed':
+            # Calculate points based on amount paid after rewards
+            actual_paid = order.total_amount - (order.rewards_used or Decimal('0.00'))
+            points = int(actual_paid * 10)  # $1 = 10 points
+            total_points_earned += points
 
     # Add is_recent flag to all orders
     current_time = now()
@@ -331,7 +383,9 @@ def my_orders(request):
             order.is_recent = current_time - order.created_at < timedelta(minutes=5)
 
     return render(request, 'orders/my_orders.html', {
-        'orders': orders
+        'orders': orders,
+        'total_spent': total_spent,
+        'total_points_earned': total_points_earned,
     })
 
 
@@ -511,12 +565,29 @@ def payment_success(request):
 
             # Clear cart
             request.session['cart'] = {}
+            print(f"Rewards used: {rewards_used}")
+            # Send admin notification -websocket
+            try:
+                # After successful order creation
+                notify_admin("new_order", {
+                    "id": order.id,
+                    "time": order.created_at.strftime("%H:%M"),
+                    "total": str(order.total_amount),
+                    "status": order.get_status_display(),
+                    "customer_name": order.name,
+                    "items_count": order.items.count(),
+                    "payment_method": order.get_payment_method_display()
+                })
+            except Exception as e:
+                print(f"Error sending notification to admin: {e}")
 
             # Send confirmation email
             try:
                 send_order_confirmation_email(order)
             except Exception as e:
                 print(f"Error sending confirmation email: {e}")
+
+
 
             messages.success(request, 'Payment successful! Your order has been confirmed.')
             return redirect('orders:order_success', order_id=order.id)
@@ -626,3 +697,19 @@ def apple_pay_cancel(request):
     if order_id:
         return redirect('orders:checkout')
     return redirect('menu:menu_list')
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+def notify_admin(notification_type, data):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "admin_notifications",
+        {
+            "type": "notification_message",
+            "message": {
+                "type": notification_type,
+                "data": data
+            }
+        }
+    )

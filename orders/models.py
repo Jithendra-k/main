@@ -55,15 +55,54 @@ class Order(models.Model):
             return self.transaction.get_status_display()
         return 'No Transaction'
 
+    def update_customer_rewards(self):
+        """Update customer's loyalty points and rewards after order completion"""
+        if self.user and self.status == 'completed' and not hasattr(self, '_rewards_processed'):
+            self._rewards_processed = True
+            actual_paid = self.total_amount - (self.rewards_used or Decimal('0.00'))
+
+            # Update user's profile and convert points if necessary
+            profile = self.user.profile
+            points_earned = profile.calculate_rewards(actual_paid)
+
+            # Update order points
+            self.points_earned = points_earned
+            self.save(update_fields=['points_earned'], update_rewards=False)
+
     def save(self, *args, **kwargs):
-        if not self.points_earned:
-            # Calculate points based on total amount (1000 points per $100)
-            self.points_earned = int((self.total_amount / Decimal('100.00')) * 1000)
+        update_rewards = kwargs.pop('update_rewards', True)
+        is_new = not self.pk
+
+        # Calculate points only for new orders
+        if is_new:
+            actual_paid = self.total_amount - (self.rewards_used or Decimal('0.00'))
+            self.points_earned = int(actual_paid * 10)
+
         super().save(*args, **kwargs)
+
+        # Only process rewards once when order is completed
+        if update_rewards and self.status == 'completed' and not is_new:
+            self.update_customer_rewards()
 
     def get_points_earned(self):
         """Get points earned for this order"""
         return self.points_earned or int((self.total_amount / Decimal('100.00')) * 1000)
+
+
+    def apply_rewards(self):
+        """Apply rewards and update user's balance"""
+        if self.user:
+            profile = self.user.profile
+            # Verify user has enough rewards
+            if profile.rewards_balance >= self.rewards_used:
+                # Deduct rewards from user's balance
+                profile.rewards_balance -= self.rewards_used
+                profile.save()
+                # Adjust total amount
+                self.total_amount -= self.rewards_used
+                self.save()
+                return True
+        return False
 
     class Meta:
         ordering = ['-created_at']

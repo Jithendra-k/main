@@ -105,26 +105,40 @@
                 <h5 class="modal-title">Redeem Gift Card</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="post" action="{% url 'giftcards:redeem_giftcard' %}">
-                {% csrf_token %}
-
-                <div class="modal-body">
+            <div class="modal-body">
                     <input type="hidden" name="card_id" id="redeem_card_id">
                     <div class="mb-3">
                         <label class="form-label">Available Balance</label>
                         <input type="text" class="form-control" id="available_balance" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Amount to Redeem</label>
-                        <input type="number" class="form-control" name="amount" id="redeem_amount"
-                               step="0.01" required>
+                        <p>To redeem your Giftcard, please visit restaurant or call the restaurant at the number below:</p>
+                        <h4 class="mt-3">+1 5589 55488 55</h4>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Redeem</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+            </div>
+{#            <form method="post" action="{% url 'giftcards:redeem_giftcard' %}">#}
+{#                {% csrf_token %}#}
+{##}
+{#                <div class="modal-body">#}
+{#                    <input type="hidden" name="card_id" id="redeem_card_id">#}
+{#                    <div class="mb-3">#}
+{#                        <label class="form-label">Available Balance</label>#}
+{#                        <input type="text" class="form-control" id="available_balance" readonly>#}
+{#                    </div>#}
+{#                    <div class="mb-3">#}
+{#                        <label class="form-label">Amount to Redeem</label>#}
+{#                        <input type="number" class="form-control" name="amount" id="redeem_amount"#}
+{#                               step="0.01" required>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div class="modal-footer">#}
+{#                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>#}
+{#                    <button type="submit" class="btn btn-primary">Redeem</button>#}
+{#                </div>#}
+{#            </form>#}
         </div>
     </div>
 </div>
@@ -134,7 +148,7 @@
 function showRedeemModal(cardId, balance) {
     document.getElementById('redeem_card_id').value = cardId;
     document.getElementById('available_balance').value = `$${balance}`;
-    document.getElementById('redeem_amount').max = balance;
+    //document.getElementById('redeem_amount').max = balance;
 
     const modal = new bootstrap.Modal(document.getElementById('redeemModal'));
     modal.show();

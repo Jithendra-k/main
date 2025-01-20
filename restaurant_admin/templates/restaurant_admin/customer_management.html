@@ -48,7 +48,7 @@
                             <td>{{ customer.user.email }}</td>
                             <td>{{ customer.phone_number|default:"-" }}</td>
                             <td>{{ customer.total_orders }}</td>
-                            <td>${{ customer.total_spent|default:"0.00" }}</td>
+                            <td>${{ customer.total_spent|floatformat:2 }}</td>
                             <td>{{ customer.loyalty_points }}</td>
                             <td>${{ customer.rewards_balance }}</td>
                             <td>

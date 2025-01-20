@@ -1274,7 +1274,7 @@ section,
 
 .events .event-item {
   background-size: cover;
-  background-position: cente;
+  background-position: center;
   min-height: 600px;
   padding: 30px;
 }
@@ -1653,4 +1653,38 @@ section,
 --------------------------------------------------------------*/
 .starter-section {
   /* Add your styles here */
+}
+
+/* Add to your main.css */
+.menu-item-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.menu-item-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.quantity-control input {
+    width: 50px;
+    text-align: center;
+}
+
+.cart-summary {
+    position: sticky;
+    top: 20px;
+}
+
+.category-sidebar {
+    position: sticky;
+    top: 20px;
 }

@@ -20,23 +20,28 @@ class UserProfile(models.Model):
         return self.user.username
 
     def calculate_rewards(self, order_amount):
-        """Calculate and add loyalty points based on order amount"""
-        points_earned = int((order_amount / Decimal('100.00')) * 1000)
+        """Calculate and add loyalty points based on order amount
+        $1 = 10 points, 1000 points = $5 reward
+        """
+        points_earned = int(order_amount * 10)  # $1 = 10 points
         self.loyalty_points += points_earned
 
-        # Convert points to rewards ($5 for every 1000 points)
+        # Convert points to rewards when they reach 1000
         while self.loyalty_points >= 1000:
+            # Convert 1000 points to $5 reward
             self.loyalty_points -= 1000
             self.rewards_balance += Decimal('5.00')
 
-        self.save()
+        self.save(update_fields=['loyalty_points', 'rewards_balance'])
         return points_earned
 
     def use_rewards(self, amount):
         """Use available rewards for payment"""
+        amount = Decimal(str(amount))
         if amount <= self.rewards_balance:
             self.rewards_balance -= amount
-            self.save()
+            self.rewards_balance = Decimal(str(round(self.rewards_balance, 2)))
+            self.save(update_fields=['rewards_balance'])
             return True
         return False
 
@@ -117,5 +122,15 @@ class Transaction(models.Model):
                 self.payment_method in ['stripe', 'apple_pay', 'paypal'] and
                 self.payment_id is not None  # Must have a payment ID to refund
         )
+
+    def save(self, *args, **kwargs):
+        if not self.reference_id:
+            if self.transaction_type == 'order':
+                self.reference_id = f"ORD-{self.id}"
+            elif self.transaction_type == 'gift_card_purchase':
+                self.reference_id = f"GC-{self.id}"
+            elif self.transaction_type == 'refund':
+                self.reference_id = f"REF-{self.id}"
+        super().save(*args, **kwargs)
 
 

@@ -186,8 +186,14 @@ def update_order_status(request, order_id):
         if new_status not in valid_statuses:
             return JsonResponse({'error': 'Invalid status'}, status=400)
 
-        order.status = new_status
-        order.save()
+        if new_status == 'completed':
+            # Update rewards when order is completed
+            order.status = new_status
+            order.save()
+            order.update_customer_rewards()  # Add this line
+        else:
+            order.status = new_status
+            order.save()
 
         if new_status == 'ready':
             try:
@@ -209,6 +215,8 @@ def update_order_status(request, order_id):
                 )
             except Exception as e:
                 print(f"Error sending order ready email: {str(e)}")
+
+
 
         badge_class = {
             'pending': 'bg-warning',
@@ -583,7 +591,8 @@ def get_transaction_details(request, transaction_id):
         'status': transaction.get_status_display(),
         'payment_method': transaction.payment_method,
         'can_refund': transaction.can_be_refunded(),
-        'refunded_amount': float(transaction.refunded_amount)
+        'refunded_amount': float(transaction.refunded_amount),
+        'reference_id': transaction.reference_id  # Add reference ID
     })
 
 
@@ -986,10 +995,22 @@ def customer_management(request):
 def customer_detail(request, user_id):
     customer = get_object_or_404(UserProfile, user_id=user_id)
 
+    # Add rewards statistics
+    rewards_stats = {
+        'total_points_earned': Order.objects.filter(
+            user_id=user_id,
+            status='completed'
+        ).aggregate(Sum('points_earned'))['points_earned__sum'] or 0,
+        'current_points': customer.loyalty_points,
+        'rewards_balance': customer.rewards_balance,
+        'total_rewards_used': Order.objects.filter(
+            user_id=user_id
+        ).aggregate(Sum('rewards_used'))['rewards_used__sum'] or 0,
+    }
+
     # Get transaction data
     transactions = Transaction.objects.filter(user_id=user_id)
 
-    from django.db import models
 
     stats = transactions.aggregate(
         total_spent=Sum(Case(
@@ -1046,7 +1067,9 @@ def customer_detail(request, user_id):
         'orders': orders,
         'reservations': reservations,
         'order_page_param': order_page_param,
-        'res_page_param': res_page_param
+        'res_page_param': res_page_param,
+        'rewards_stats': rewards_stats,
+
         # ... rest of your existing context ...
     }
     return render(request, 'restaurant_admin/customer_detail.html', context)

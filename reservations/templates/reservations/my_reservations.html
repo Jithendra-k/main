@@ -65,7 +65,17 @@
         <!-- After table reservations table -->
         {% include 'includes/pagination_style.html' with items=table_reservations page_param='table_page' extra_param=event_page_param %}
 
-
+        <div class="booking-actions text-center mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'reservations:book_table' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-calendar-plus"></i> Book a Table
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Event Bookings -->
         <div class="event-bookings" data-aos="fade-up">
@@ -140,10 +150,7 @@
                 <div class="col-md-6">
                     <div class="d-grid gap-3">
                         <a href="{% url 'reservations:book_table' %}" class="btn btn-outline-primary">
-                            <i class="bi bi-calendar-plus"></i> Book a Table
-                        </a>
-                        <a href="{% url 'reservations:book_event' %}" class="btn btn-outline-primary">
-                            <i class="bi bi-calendar-event"></i> Book an Event
+                            <i class="bi bi-calendar-event"></i> Book an Event(Coming soon)
                         </a>
                     </div>
                 </div>

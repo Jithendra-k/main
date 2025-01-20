@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Order Confirmation - Royal Nepal Restaurant</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+        .header {
+            background-color: #ce1212;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ce1212;
+            margin-bottom: 10px;
+        }
+        .info-block {
+            margin-bottom: 20px;
+        }
+        .info-block p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        .order-table th, .order-table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .order-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        .total-row {
+            font-weight: bold;
+        }
+        .footer {
+            background-color: #f8f8f8;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Royal Nepal Restaurant</h1>
+            <p>Order Confirmation</p>
+        </div>
+        <div class="content">
+            <p>Hi <strong>{{ order.name }}</strong>,</p>
+            <p>Thank you for your order! Here are your order details:</p>
+
+            <div class="info-block">
+                <p><strong>Order Number:</strong> {{ order.id }}</p>
+                <p><strong>Pickup Time:</strong> {{ order.get_estimated_pickup_time }}</p>
+                <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
+            </div>
+
+            <div class="section-title">Order Details</div>
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                    <tr>
+                        <td>{{ item.menu_item.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>${{ item.get_cost }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td colspan="2">Subtotal</td>
+                        <td>${{ order.calculate_subtotal }}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="2">Tax (13%)</td>
+                        <td>${{ order.calculate_tax }}</td>
+                    </tr>
+                    {% if order.tip_amount > 0 %}
+                    <tr class="total-row">
+                        <td colspan="2">Tip</td>
+                        <td>${{ order.tip_amount }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if order.rewards_used > 0 %}
+                    <tr class="total-row">
+                        <td colspan="2">Rewards Applied</td>
+                        <td style="color: #198754;">-${{ order.rewards_used }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="total-row">
+                        <td colspan="2">Total</td>
+                        <td>${{ order.total_amount }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            {% if order.special_instructions %}
+            <div class="section-title">Special Instructions</div>
+            <p>{{ order.special_instructions }}</p>
+            {% endif %}
+
+            {% if order.payment_method == 'in_store' %}
+            <p><strong>Note:</strong> Please pay upon pickup.</p>
+            {% else %}
+            <p><strong>Payment Status:</strong> {% if order.payment_status == 'paid' %}Paid{% else %}Pending{% endif %}</p>
+            {% endif %}
+
+            <p>We'll notify you once your order is ready for pickup.</p>
+        </div>
+        <div class="footer">
+            <p>Royal Nepal Restaurant &copy; 2024. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

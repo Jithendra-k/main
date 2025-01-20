@@ -82,8 +82,8 @@ def book_table(request):
                 if booking_datetime <= timezone.now():
                     raise ValueError('Please select a future date and time')
 
-                if booking_time.hour < 11 or booking_time.hour >= 23:
-                    raise ValueError('Bookings are only available between 11:00 AM and 11:00 PM')
+                if booking_time.hour < 12 or booking_time.hour >= 21:
+                    raise ValueError('Bookings are only available between 12:00 PM and 9:00 PM')
 
             except ValueError as e:
                 messages.error(request, str(e))
@@ -101,6 +101,17 @@ def book_table(request):
                 special_request=request.POST.get('special_request', ''),
                 status='pending'
             )
+            try:
+                # After successful reservation creation
+                notify_admin("new_reservation", {
+                    "id": reservation.id,
+                    "time": reservation.time.strftime("%H:%M"),
+                    "name": reservation.name,
+                    "guests": reservation.guests,
+                    "status": reservation.get_status_display()
+                })
+            except Exception as e:
+                print(f"Error sending notification to admin -websocket: {e}")
 
             # Send notification to restaurant
             send_reservation_request_to_restaurant(reservation)
@@ -210,8 +221,8 @@ def book_event(request):
 
                 # Validate time is within business hours (11 AM - 11 PM)
                 hour = booking_datetime.hour
-                if hour < 11 or hour >= 23:
-                    messages.error(request, 'Events can only be booked between 11:00 AM and 11:00 PM')
+                if hour < 12 or hour >= 21:
+                    messages.error(request, 'Events can only be booked between 12:00 PM and 09:00 PM')
                     return redirect('reservations:book_event')
 
             except ValueError:
@@ -706,6 +717,22 @@ def send_cancellation_email(reservation, is_event=False, refund_amount=0, refund
     except Exception as e:
         print(f"Error sending cancellation email: {e}")
         # Log the error but don't stop the cancellation process
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+def notify_admin(notification_type, data):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "admin_notifications",
+        {
+            "type": "notification_message",
+            "message": {
+                "type": notification_type,
+                "data": data
+            }
+        }
+    )
 
 
 

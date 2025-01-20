@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'channels',
 
     # Local apps
     'core.apps.CoreConfig',
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     'reservations.apps.ReservationsConfig',
     'restaurant_admin.apps.RestaurantAdminConfig',
     'giftcards.apps.GiftcardsConfig',
+    'websockets.apps.WebsocketsConfig',
 ]
 
 MIDDLEWARE = [
@@ -87,6 +89,43 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "main.wsgi.application"
+
+ASGI_APPLICATION = "main.asgi.application"
+# WebSocket settings
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+        "CONFIG": {
+            "capacity": 1500,  # Maximum number of messages that can be stored
+        },
+    },
+}
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'websocket.log',
+        },
+    },
+    'loggers': {
+        'websockets': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+
+
+
 
 
 # Database
@@ -150,30 +189,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-# settings.py
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': 'django_errors.log',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-        'reservations': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    },
-}
+
 
 
 # Session configuration

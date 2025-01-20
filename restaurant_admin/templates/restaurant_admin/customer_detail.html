@@ -40,10 +40,10 @@
                     <div class="row">
                         <div class="col-md-6">
                             <p><strong>Total Orders:</strong> {{ total_orders }}</p>
-                            <p><strong>Total Spent:</strong> ${{ total_spent|default:"0.00" }}</p>
+                            <p><strong>Total Spent:</strong> ${{ total_spent|floatformat:2 }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Total Refunds:</strong> ${{ total_refunds|default:"0.00" }}</p>
+                            <p><strong>Total Refunds:</strong> ${{ total_refunds|floatformat:2 }}</p>
                             <p><strong>Last Transaction:</strong> {{ last_transaction_date|date:"M d, Y" }}</p>
                         </div>
                     </div>

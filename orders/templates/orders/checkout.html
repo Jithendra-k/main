@@ -106,15 +106,16 @@
                         </div>
                     </div>
 
-                    <!-- Rewards Section -->
+                    <!-- In orders/templates/orders/checkout.html, add this in the order summary section -->
+
                     {% if user.profile.rewards_balance > 0 %}
                     <div class="card mb-4">
                         <div class="card-body">
-                            <h5 class="card-title mb-4">Rewards</h5>
+                            <h5 class="card-title">Available Rewards</h5>
                             <div class="alert alert-info d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-0">Available Rewards: ${{ user.profile.rewards_balance|floatformat:2 }}</h6>
-                                    <small>You can use your rewards to reduce your order total</small>
+                                    <h6 class="mb-0">Current Balance: ${{ user.profile.rewards_balance|floatformat:2 }}</h6>
+                                    <small>Use your rewards to reduce your order total</small>
                                 </div>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="useRewards" name="use_rewards">
@@ -131,7 +132,7 @@
                                                class="form-control"
                                                name="rewards_amount"
                                                id="rewardsAmount"
-                                               step="1.0"
+                                               step="1.00"
                                                min="0"
                                                max="{{ user.profile.rewards_balance }}"
                                                value="0">
@@ -141,6 +142,43 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Add this JavaScript to handle rewards visibility and calculations -->
+                    <script>
+                    document.getElementById('useRewards').addEventListener('change', function() {
+                        const rewardsSection = document.getElementById('rewardsAmountSection');
+                        const rewardsInput = document.getElementById('rewardsAmount');
+
+                        if (this.checked) {
+                            rewardsSection.style.display = 'block';
+                            updateTotalWithRewards();
+                        } else {
+                            rewardsSection.style.display = 'none';
+                            rewardsInput.value = '0';
+                            updateTotalWithRewards();
+                        }
+                    });
+
+                    document.getElementById('rewardsAmount').addEventListener('input', function() {
+                        const maxRewards = {{ user.profile.rewards_balance }};
+                        if (this.value > maxRewards) {
+                            this.value = maxRewards;
+                        }
+                        updateTotalWithRewards();
+                    });
+
+                    function updateTotalWithRewards() {
+                        const rewardsAmount = parseFloat(document.getElementById('rewardsAmount').value) || 0;
+                        const subtotal = {{ cart_total }};
+                        const tax = {{ tax_amount }};
+                        const tipAmount = parseFloat(document.getElementById('hidden_tip_amount').value) || 0;
+
+                        const totalBeforeRewards = subtotal + tax + tipAmount;
+                        const finalTotal = totalBeforeRewards - rewardsAmount;
+
+                        document.getElementById('finalTotal').textContent = `$${finalTotal.toFixed(2)}`;
+                    }
+                    </script>
                     {% endif %}
 
                     <!-- Special Instructions -->
@@ -259,7 +297,47 @@
         </div>
     </div>
 </div>
+<style>
+.rewards-info, .rewards-balance {
+    background-color: #f8f9fa;
+    transition: transform 0.2s;
+}
 
+.rewards-info:hover, .rewards-balance:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.bi-star-fill {
+    font-size: 1.5rem;
+    color: #ffd700;
+}
+
+.bi-cash {
+    font-size: 1.5rem;
+    color: #28a745;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+#rewardsAmountSection {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
 {% block extra_js %}
     {{ block.super }}
     <script src="https://js.stripe.com/v3/"></script>
@@ -405,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tip_amount: tipAmount.toString(),
                 use_rewards: useRewards,
                 rewards_amount: rewardsAmount.toString(),
-                total_amount: finalTotal.toString()
+                total_amount: (finalTotal).toString()
             };
 
             // Create order and payment intent

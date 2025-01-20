@@ -73,6 +73,107 @@
         <!-- Pagination -->
         <!-- After orders table -->
         {% include 'includes/pagination_style.html' with items=orders %}
+
+    <!-- Add this new Rewards Summary section -->
+        <div class="card mt-5">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">Rewards Summary</h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <!-- Total Points Earned -->
+                    <div class="col-md-3">
+                        <div class="rewards-stat p-3 border rounded text-center">
+                            <i class="bi bi-star-fill text-warning mb-2" style="font-size: 2rem;"></i>
+                            <h5>Total Points Earned</h5>
+                            <div class="h3 mb-0">{{ total_points_earned }}</div>
+                            <small class="text-muted">Since joining</small>
+                        </div>
+                    </div>
+
+                    <!-- Current Points -->
+                    <div class="col-md-3">
+                        <div class="rewards-stat p-3 border rounded text-center">
+                            <i class="bi bi-stars text-info mb-2" style="font-size: 2rem;"></i>
+                            <h5>Current Points</h5>
+                            <div class="h3 mb-0">{{ user.profile.loyalty_points }}</div>
+                            <small class="text-muted">Available points</small>
+                        </div>
+                    </div>
+
+                    <!-- Current Rewards Balance -->
+                    <div class="col-md-3">
+                        <div class="rewards-stat p-3 border rounded text-center">
+                            <i class="bi bi-cash-coin text-success mb-2" style="font-size: 2rem;"></i>
+                            <h5>Rewards Balance</h5>
+                            <div class="h3 mb-0">${{ user.profile.rewards_balance }}</div>
+                            <small class="text-muted">Available to use</small>
+                        </div>
+                    </div>
+
+                    <!-- Total Spent -->
+                    <div class="col-md-3">
+                        <div class="rewards-stat p-3 border rounded text-center">
+                            <i class="bi bi-receipt text-primary mb-2" style="font-size: 2rem;"></i>
+                            <h5>Total Spent</h5>
+                            <div class="h3 mb-0">${{ total_spent|floatformat:2 }}</div>
+                            <small class="text-muted">All time</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rewards Info -->
+                <div class="alert alert-info mt-4 mb-0">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <div>
+                            <strong>How Rewards Work:</strong>
+                            <ul class="mb-0 mt-1">
+                                <li>Earn 1000 points for every $100 spent</li>
+                                <li>Every 1000 points = $5 in rewards</li>
+                                {% if user.profile.rewards_balance > 0 %}
+                                <li>You have ${{ user.profile.rewards_balance }} in rewards available to use on your next order!</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+<style>
+.rewards-stat {
+    background-color: #fff;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.rewards-stat:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.bi-star-fill {
+    color: #ffd700;
+}
+
+.bi-stars {
+    color: #17a2b8;
+}
+
+.bi-cash-coin {
+    color: #28a745;
+}
+
+.bi-receipt {
+    color: #007bff;
+}
+
+.alert ul {
+    padding-left: 1.5rem;
+}
+</style>
+
     </div>
 </section>
 
@@ -94,6 +195,8 @@
         </div>
     </div>
 </div>
+
+
 
 <script>
     function showModifyModal(orderId) {

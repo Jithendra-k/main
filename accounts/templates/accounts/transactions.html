@@ -47,7 +47,13 @@
                                         {{ transaction.get_status_display }}
                                     </span>
                                 </td>
-                                <td>{{ transaction.reference_id }}</td>
+                                <td>
+                                    Transaction Id: #{{ transaction.id }}
+                                    {% if transaction.reference_id %}
+                                    <br>
+                                    <small class="text-muted">Ref: {{ transaction.reference_id }}</small>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>

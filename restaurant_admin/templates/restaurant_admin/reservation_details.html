@@ -173,8 +173,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        showToast('Arrival status updated successfully.', 'success');
-                    } else {
+                        // Show success message
+                        const alert = document.createElement('div');
+                        alert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+                        alert.style.zIndex = '1050';
+                        alert.innerHTML = `
+                            Arrival status updated successfully
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        `;
+                        document.body.appendChild(alert);
+
+                        setTimeout(() => alert.remove(), 3000);
+                    }
+                    else {
                         showToast('Failed to update arrival status.', 'danger');
                     }
                 })
