@@ -108,6 +108,7 @@
                             <tr>
                                 <th>Time</th>
                                 <th>Order #</th>
+{#                                <th>Items</th>#}
                                 <th>Total</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -118,6 +119,28 @@
                             <tr>
                                 <td>{{ order.created_at|time:"H:i" }}</td>
                                 <td>{{ order.id }}</td>
+{#                                <td>#}
+{#                                    {% for item in order.items.all %}#}
+{#                                        <div class="mb-1">#}
+{#                                            {{ item.quantity }}x {{ item.menu_item.name }}#}
+{#                                            {% if item.choice or item.addons.exists %}#}
+{#                                                <small class="text-muted">#}
+{#                                                    (#}
+{#                                                    {% if item.choice %}#}
+{#                                                        {{ item.choice.name }}#}
+{#                                                    {% endif %}#}
+{#                                                    {% if item.addons.exists %}#}
+{#                                                        {% if item.choice %}, {% endif %}#}
+{#                                                        {% for addon in item.addons.all %}#}
+{#                                                            {{ addon.name }}{% if not forloop.last %}, {% endif %}#}
+{#                                                        {% endfor %}#}
+{#                                                    {% endif %}#}
+{#                                                    )#}
+{#                                                </small>#}
+{#                                            {% endif %}#}
+{#                                        </div>#}
+{#                                    {% endfor %}#}
+{#                                </td>#}
                                 <td>${{ order.total_amount }}</td>
                                 <td>
                                     <span class="badge {% if order.status == 'pending' %}bg-warning
@@ -208,6 +231,35 @@
 
 {% block extra_css %}
     <style>
+.badge {
+    font-weight: normal;
+    padding: 0.4em 0.8em;
+    margin-right: 0.2em;
+}
+
+.text-muted {
+    font-size: 0.9em;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.customizations-cell {
+    max-width: 250px;
+}
+
+.badge.bg-info {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+    color: #0dcaf0;
+    border: 1px solid #0dcaf0;
+}
+
+.badge.bg-secondary {
+    background-color: rgba(108, 117, 125, 0.1) !important;
+    color: #6c757d;
+    border: 1px solid #6c757d;
+}
     .status-indicator {
     width: 12px;
     height: 12px;

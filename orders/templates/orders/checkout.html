@@ -204,10 +204,19 @@
                     <div class="card-body">
                         <h5 class="card-title mb-4">Order Summary</h5>
 
-                        <!-- Order Items -->
                         {% for item in cart_items %}
                         <div class="d-flex justify-content-between mb-2">
-                            <span>{{ item.menu_item.name }} × {{ item.quantity }}</span>
+                            <span>
+                                {{ item.menu_item.name }} × {{ item.quantity }}
+                                {% if item.choice %}
+                                <small class="text-muted">({{ item.choice.name }})</small>
+                                {% endif %}
+                                {% if item.addons %}
+                                <small class="text-muted">
+                                    + {{ item.addons|join:', ' }}
+                                </small>
+                                {% endif %}
+                            </span>
                             <span>${{ item.total_price }}</span>
                         </div>
                         {% endfor %}
@@ -555,7 +564,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const {error} = await stripe.confirmPayment({
                         elements,
                         confirmParams: {
-                            return_url: `${window.location.origin}/order/payment-success/`,
+                            return_url: `${window.location.origin}/orders/payment-success/`,
                         }
                     });
 
@@ -589,7 +598,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const {error} = await stripe.confirmPayment({
                 elements,
                 confirmParams: {
-                    return_url: `${window.location.origin}/order/payment-success/${data.order_id}/`,
+                    return_url: `${window.location.origin}/orders/payment-success/${data.order_id}/`,
                 }
             });
 

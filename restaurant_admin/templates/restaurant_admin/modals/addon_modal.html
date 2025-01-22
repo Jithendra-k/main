@@ -1,0 +1,45 @@
+<!-- restaurant_admin/modals/addon_modal.html -->
+<div class="modal fade" id="addonModal" tabindex="-1" aria-labelledby="addonModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addonModalLabel">Add Add-on</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addonForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <!-- Name field -->
+                    <div class="mb-3">
+                        <label for="addonName" class="form-label">Add-on Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="addonName" name="name" required>
+                    </div>
+
+                    <!-- Description field -->
+                    <div class="mb-3">
+                        <label for="addonDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="addonDescription" name="description" rows="2"></textarea>
+                    </div>
+
+                    <!-- Price field -->
+                    <div class="mb-3">
+                        <label for="addonPrice" class="form-label">Price ($) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="addonPrice" name="price"
+                               step="0.01" min="0" required
+                               onchange="validatePriceField(this)">
+                    </div>
+
+                    <!-- Availability Toggle -->
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="addonIsAvailable" name="is_available" checked>
+                        <label class="form-check-label" for="addonIsAvailable">Available</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitAddonForm()">Save Add-on</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

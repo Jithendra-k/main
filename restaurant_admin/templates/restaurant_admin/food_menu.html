@@ -3,12 +3,13 @@
 {% block content %}
 <div class="container-fluid">
     <div class="row">
-        <!-- Categories Section -->
+        <!-- Categories and Customization Options Column -->
         <div class="col-md-4">
-            <div class="card">
+            <!-- Categories Card -->
+            <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Categories</h5>
-                    <button class="btn btn-sm btn-success" onclick="addCategory()">
+                    <button class="btn btn-sm btn-success" onclick="showAddCategoryModal()">
                         <i class="bi bi-plus"></i> Add Category
                     </button>
                 </div>
@@ -33,32 +34,93 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-            <!-- Menu Items Section -->
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="mb-0">Menu Items</h5>
-                            <button class="btn btn-sm btn-success" onclick="addMenuItem()">
-                                <i class="bi bi-plus"></i> Add Menu Item
-                            </button>
-                        </div>
-
-                        <!-- Category Filter -->
-                        <div class="row">
-                            <div class="col-md-4">
-                                <select class="form-select form-select-sm" id="categoryFilter" onchange="filterMenuItems()">
-                                    <option value="all">All Categories</option>
-                                    {% for category in categories %}
-                                        <option value="{{ category.id }}">{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
+            <!-- Choices Card -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Item Choices</h5>
+                    <button class="btn btn-sm btn-success" onclick="showAddChoiceModal()">
+                        <i class="bi bi-plus"></i> Add Choice
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for choice in choices %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{ choice.name }}</h6>
+                                <small class="text-muted">+${{ choice.price_adjustment }}</small>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-primary" onclick="editChoice({{ choice.id }})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteChoice({{ choice.id }})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-            <!-- ... rest of your table code ... -->
+                </div>
+            </div>
+
+            <!-- Add-ons Card -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Item Add-ons</h5>
+                    <button class="btn btn-sm btn-success" onclick="showAddAddonModal()">
+                        <i class="bi bi-plus"></i> Add Add-on
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for addon in addons %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{ addon.name }}</h6>
+                                <small class="text-muted">${{ addon.price }}</small>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-primary" onclick="editAddon({{ addon.id }})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteAddon({{ addon.id }})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Items Column -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0">Menu Items</h5>
+                        <button class="btn btn-success" onclick="showAddMenuItemModal()">
+                            <i class="bi bi-plus"></i> Add Menu Item
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <select class="form-select" id="categoryFilter" onchange="filterMenuItems()">
+                                <option value="all">All Categories</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" id="searchInput"
+                                   placeholder="Search menu items..." onkeyup="filterMenuItems()">
+                        </div>
+                    </div>
+                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -68,7 +130,7 @@
                                     <th>Name</th>
                                     <th>Category</th>
                                     <th>Price</th>
-                                    <th>Spice Level</th>
+                                    <th>Customizations</th>
                                     <th>Available</th>
                                     <th>Actions</th>
                                 </tr>
@@ -95,12 +157,19 @@
                                     <td>{{ item.category.name }}</td>
                                     <td>${{ item.price }}</td>
                                     <td>
-                                        <span class="badge {% if item.spice_level == 'very_spicy' %}bg-danger
-                                                   {% elif item.spice_level == 'spicy' %}bg-warning text-dark
-                                                   {% elif item.spice_level == 'medium' %}bg-info text-dark
-                                                   {% else %}bg-success{% endif %}">
-                                            {{ item.get_spice_level_display }}
-                                        </span>
+                                        <div class="d-flex flex-column gap-1">
+                                            {% if item.has_choices %}
+                                                <span class="badge bg-info">
+                                                    Has Choices {% if item.requires_choice %}(Required){% endif %}
+                                                </span>
+                                            {% endif %}
+                                            {% if item.available_addons.exists %}
+                                                <span class="badge bg-info">Has Add-ons</span>
+                                            {% endif %}
+                                            {% if item.has_spice_customization %}
+                                                <span class="badge bg-warning">Customizable Spice</span>
+                                            {% endif %}
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="form-check form-switch">
@@ -127,267 +196,149 @@
                 </div>
             </div>
         </div>
-
-        <!-- Menu Item Modal -->
-        <div class="modal fade" id="menuItemModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="menuItemModalTitle">Add Menu Item</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <form id="menuItemForm" enctype="multipart/form-data">
-                        <div class="modal-body">
-                            <input type="hidden" name="item_id" id="menuItemId">
-
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="mb-3">
-                                        <label class="form-label">Item Name</label>
-                                        <input type="text" class="form-control" name="name" required>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Category</label>
-                                        <select class="form-select" name="category" required>
-                                            <option value="">Select Category</option>
-                                            {% for category in categories %}
-                                                <option value="{{ category.id }}">{{ category.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Price ($)</label>
-                                        <input type="number" class="form-control" name="price" step="0.01" min="0" required>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Description</label>
-                                        <textarea class="form-control" name="description" rows="3"></textarea>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Spice Level</label>
-                                        <select class="form-select" name="spice_level">
-                                            <option value="mild">Mild</option>
-                                            <option value="medium" selected>Medium</option>
-                                            <option value="spicy">Spicy</option>
-                                            <option value="very_spicy">Very Spicy</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="is_available" id="isAvailable" checked>
-                                            <label class="form-check-label" for="isAvailable">
-                                                Available for Order
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label">Item Image</label>
-                                        <div class="image-preview mb-2">
-                                            <img id="imagePreview" src="" alt=""
-                                                 style="max-width: 100%; display: none; border-radius: 4px;">
-                                        </div>
-                                        <input type="file" class="form-control" name="image" accept="image/*"
-                                               onchange="previewImage(this)">
-                                        <small class="form-text text-muted">Recommended size: 500x500px</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Item</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
-{#<!-- Add/Edit Category Modal -->#}
-<div class="modal fade" id="categoryModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="categoryModalTitle">Add Category</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="categoryForm">
-                <div class="modal-body">
-                    <input type="hidden" name="category_id" id="categoryId">
+<!-- Include all necessary modals -->
+{% include "restaurant_admin/modals/category_modal.html" %}
+{% include "restaurant_admin/modals/menu_item_modal.html" %}
+{% include "restaurant_admin/modals/choice_modal.html" %}
+{% include "restaurant_admin/modals/addon_modal.html" %}
 
-                    <div class="mb-3">
-                        <label class="form-label">Category Name</label>
-                        <input type="text" class="form-control" name="name" required>
-                    </div>
+{% block extra_css %}
+<style>
+/* Card Styling */
+.card {
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+}
 
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3"></textarea>
-                    </div>
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #ce1212;
+}
 
-                    <div class="mb-3">
-                        <label class="form-label">Display Order</label>
-                        <input type="number" class="form-control" name="display_order" value="0">
-                        <small class="form-text text-muted">Lower numbers appear first</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Category</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+/* List Group Styling */
+.list-group-item {
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+}
 
-<!-- Add Menu Item Modal -->
-<!-- Add/Edit Menu Item Modal -->
-<div class="modal fade" id="menuItemModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="menuItemModalTitle">Add Menu Item</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="menuItemForm" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <input type="hidden" name="item_id" id="menuItemId">
+.list-group-item:hover {
+    border-left-color: #ce1212;
+    background-color: #f8f9fa;
+}
 
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="mb-3">
-                                <label class="form-label">Item Name</label>
-                                <input type="text" class="form-control" name="name" required>
-                            </div>
+/* Button Styling */
+.btn-group .btn {
+    margin-right: 2px;
+}
 
-                            <div class="mb-3">
-                                <label class="form-label">Category</label>
-                                <select class="form-select" name="category" required>
-                                    {% for category in categories %}
-                                        <option value="{{ category.id }}">{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+.btn-group .btn:hover {
+    opacity: 0.9;
+}
 
-                            <div class="mb-3">
-                                <label class="form-label">Price ($)</label>
-                                <input type="number" class="form-control" name="price" step="0.01" required>
-                            </div>
+.btn-group .btn:active {
+    transform: scale(0.95);
+}
 
-                            <div class="mb-3">
-                                <label class="form-label">Spice Level</label>
-                                <select class="form-select" name="spice_level">
-                                    <option value="mild">Mild</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="spicy">Spicy</option>
-                                    <option value="very_spicy">Very Spicy</option>
-                                </select>
-                            </div>
+/* Form Controls */
+.form-select:focus,
+.form-control:focus {
+    border-color: #ce1212;
+    box-shadow: 0 0 0 0.2rem rgba(206, 18, 18, 0.25);
+}
 
-                            <div class="mb-3">
-                                <label class="form-label">Description</label>
-                                <textarea class="form-control" name="description" rows="3"></textarea>
-                            </div>
-                        </div>
+/* Switch Toggle */
+.form-check-input:checked {
+    background-color: #ce1212;
+    border-color: #ce1212;
+}
 
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Item Image</label>
-                                <div class="image-preview mb-2">
-                                    <img id="imagePreview" src="" alt="" style="max-width: 100%; display: none;">
-                                </div>
-                                <input type="file" class="form-control" name="image" accept="image/*"
-                                       onchange="previewImage(this)">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Item</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+/* Badge Styling */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.6em;
+}
 
+/* Table Styling */
+.table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    .btn-group {
+        display: flex;
+    }
+
+    .btn-group .btn {
+        flex: 1;
+    }
+
+    .table-responsive {
+        border: 0;
+    }
+}
+</style>
 {% endblock %}
-
+{% endblock %}
 {% block extra_js %}
 <script>
-// Initialize modals
-let menuItemModal;
-let categoryModal;
+// Initialize modals and other components
+let categoryModal, menuItemModal, choiceModal, addonModal;
+let currentEditId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    menuItemModal = new bootstrap.Modal(document.getElementById('menuItemModal'));
+    // Initialize Bootstrap modals
     categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+    menuItemModal = new bootstrap.Modal(document.getElementById('menuItemModal'));
+    choiceModal = new bootstrap.Modal(document.getElementById('choiceModal'));
+    addonModal = new bootstrap.Modal(document.getElementById('addonModal'));
 
-    // Initialize form submit handlers
-    document.getElementById('menuItemForm').addEventListener('submit', handleMenuItemSubmit);
-    document.getElementById('categoryForm').addEventListener('submit', handleCategorySubmit);
+    // Initialize image preview handlers
+    initializeImagePreview();
 });
 
-// Category Functions
-function addCategory() {
-    document.getElementById('categoryModalTitle').textContent = 'Add Category';
+// Category Management Functions
+function showAddCategoryModal() {
+    currentEditId = null;
+    document.querySelector('#categoryModal .modal-title').textContent = 'Add Category';
     document.getElementById('categoryForm').reset();
-    document.getElementById('categoryId').value = '';
     categoryModal.show();
 }
 
-function editCategory(categoryId) {
-    fetch(`/restaurant-admin/menu/category/${categoryId}/edit/`, {
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('categoryModalTitle').textContent = 'Edit Category';
-        const form = document.getElementById('categoryForm');
-        form.elements['category_id'].value = categoryId;
-        form.elements['name'].value = data.name;
-        form.elements['description'].value = data.description || '';
-        form.elements['display_order'].value = data.display_order;
-        categoryModal.show();
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error loading category details');
-    });
-}
+function submitCategoryForm() {
+    const form = document.getElementById('categoryForm');
+    const formData = new FormData(form);
 
-function handleCategorySubmit(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const categoryId = formData.get('category_id');
-
+    // Create the data object
     const data = {
         name: formData.get('name'),
         description: formData.get('description'),
-        display_order: formData.get('display_order')
+        display_order: parseInt(formData.get('display_order')) || 0,
+        is_active: formData.get('is_active') === 'on'  // Convert checkbox value to boolean
     };
 
-    const url = categoryId ?
-        `/restaurant-admin/menu/category/${categoryId}/edit/` :
-        '/restaurant-admin/menu/category/add/';
+    const url = currentEditId
+        ? `/restaurant-admin/menu/category/${currentEditId}/edit/`
+        : '/restaurant-admin/menu/category/add/';
 
     fetch(url, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify(data)
     })
@@ -395,134 +346,153 @@ function handleCategorySubmit(e) {
     .then(data => {
         if (data.status === 'success') {
             categoryModal.hide();
+            showNotification('Category saved successfully');
             window.location.reload();
         } else {
-            alert(data.message || 'Error saving category');
+            showFormErrors(form, data.errors || { error: data.message });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error saving category');
+        showNotification('Error saving category', 'error');
     });
+
+    return false;
 }
 
+// Update the existing editCategory function
+function editCategory(categoryId) {
+    currentEditId = categoryId;
+    document.querySelector('#categoryModal .modal-title').textContent = 'Edit Category';
+
+    fetch(`/restaurant-admin/menu/category/${categoryId}/edit/`)
+        .then(response => response.json())
+        .then(data => {
+            const form = document.getElementById('categoryForm');
+            form.elements['name'].value = data.name;
+            form.elements['description'].value = data.description || '';
+            form.elements['display_order'].value = data.display_order || 0;
+            form.elements['is_active'].checked = data.is_active;
+
+            // Show the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('categoryModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error loading category', 'error');
+        });
+}
 function deleteCategory(categoryId) {
-    if (confirm('Are you sure you want to delete this category? This will also delete all menu items in this category.')) {
+    if (confirm('Are you sure you want to delete this category? This cannot be undone.')) {
         fetch(`/restaurant-admin/menu/category/${categoryId}/delete/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             }
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
+                showNotification('Category deleted successfully');
                 window.location.reload();
             } else {
-                alert(data.message || 'Error deleting category');
+                showNotification(data.message, 'error');
             }
         })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error deleting category');
-        });
+        .catch(error => showNotification('Error deleting category', 'error'));
     }
 }
 
-function addMenuItem() {
-    document.getElementById('menuItemModalTitle').textContent = 'Add Menu Item';
+// Menu Item Management Functions
+function showAddMenuItemModal() {
+    currentEditId = null;
+    document.querySelector('#menuItemModal .modal-title').textContent = 'Add Menu Item';
     document.getElementById('menuItemForm').reset();
     document.getElementById('imagePreview').style.display = 'none';
-    document.getElementById('menuItemId').value = '';
     menuItemModal.show();
 }
 
 function editMenuItem(itemId) {
-    fetch(`/restaurant-admin/menu/item/${itemId}/get/`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            document.getElementById('menuItemModalTitle').textContent = 'Edit Menu Item';
-            const form = document.getElementById('menuItemForm');
+    currentEditId = itemId;
+    document.querySelector('#menuItemModal .modal-title').textContent = 'Edit Menu Item';
 
-            // Fill in the form fields
-            form.elements['item_id'].value = data.id;
-            form.elements['name'].value = data.name;
-            form.elements['category'].value = data.category_id;
-            form.elements['price'].value = data.price;
-            form.elements['description'].value = data.description || '';
-            form.elements['spice_level'].value = data.spice_level;
-            form.elements['is_available'].checked = data.is_available;
+    fetch(`/restaurant-admin/menu/item/${itemId}/get/`)
+        .then(response => response.json())
+        .then(data => {
+            const form = document.getElementById('menuItemForm');
+            Object.keys(data).forEach(key => {
+                const input = form.elements[key];
+                if (input) {
+                    if (input.type === 'checkbox') {
+                        input.checked = data[key];
+                    } else if (input.type === 'select-multiple') {
+                        // Handle multi-select for choices and addons
+                        Array.from(input.options).forEach(option => {
+                            option.selected = data[key].includes(parseInt(option.value));
+                        });
+                    } else {
+                        input.value = data[key];
+                    }
+                }
+            });
 
             // Handle image preview
-            const preview = document.getElementById('imagePreview');
             if (data.image_url) {
-                preview.src = data.image_url;
-                preview.style.display = 'block';
-            } else {
-                preview.style.display = 'none';
+                document.getElementById('imagePreview').src = data.image_url;
+                document.getElementById('imagePreview').style.display = 'block';
             }
 
             menuItemModal.show();
         })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error loading menu item details');
-        });
+        .catch(error => showNotification('Error loading menu item', 'error'));
 }
 
-function handleMenuItemSubmit(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const itemId = formData.get('item_id');
-
-    const url = itemId ?
-        `/restaurant-admin/menu/item/${itemId}/edit/` :
-        '/restaurant-admin/menu/item/add/';
+function submitMenuItemForm() {
+    const form = document.getElementById('menuItemForm');
+    const formData = new FormData(form);
+    const url = currentEditId
+        ? `/restaurant-admin/menu/item/${currentEditId}/edit/`
+        : '/restaurant-admin/menu/item/add/';
 
     fetch(url, {
         method: 'POST',
-        body: formData,
         headers: {
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
+        },
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
             menuItemModal.hide();
+            showNotification('Menu item saved successfully');
             window.location.reload();
         } else {
-            alert(data.message || 'Error saving menu item');
+            showFormErrors(form, data.errors);
         }
     })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error saving menu item');
-    });
+    .catch(error => showNotification('Error saving menu item', 'error'));
 }
 
-
 function deleteMenuItem(itemId) {
-    if (confirm('Are you sure you want to delete this menu item?')) {
+    if (confirm('Are you sure you want to delete this menu item? This cannot be undone.')) {
         fetch(`/restaurant-admin/menu/item/${itemId}/delete/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             }
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
+                showNotification('Menu item deleted successfully');
                 window.location.reload();
             } else {
-                alert(data.message || 'Error deleting menu item');
+                showNotification(data.message, 'error');
             }
-        });
+        })
+        .catch(error => showNotification('Error deleting menu item', 'error'));
     }
 }
 
@@ -530,47 +500,313 @@ function toggleAvailability(itemId, isAvailable) {
     fetch(`/restaurant-admin/menu/item/${itemId}/toggle/`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
         }
     })
     .then(response => response.json())
     .then(data => {
         if (data.status !== 'success') {
-            alert('Error updating availability');
+            showNotification('Error updating availability', 'error');
             // Revert toggle if failed
             const checkbox = event.target;
             checkbox.checked = !checkbox.checked;
         }
+    })
+    .catch(error => {
+        showNotification('Error updating availability', 'error');
+        // Revert toggle
+        const checkbox = event.target;
+        checkbox.checked = !checkbox.checked;
     });
 }
 
-// Image preview function
-function previewImage(input) {
-    const preview = document.getElementById('imagePreview');
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
+// Choice Management Functions
+function showAddChoiceModal() {
+    currentEditId = null;
+    document.querySelector('#choiceModal .modal-title').textContent = 'Add Choice';
+    document.getElementById('choiceForm').reset();
+    choiceModal.show();
+}
+
+function editChoice(choiceId) {
+    currentEditId = choiceId;
+    document.querySelector('#choiceModal .modal-title').textContent = 'Edit Choice';
+
+    fetch(`/restaurant-admin/menu/choice/${choiceId}/get/`)
+        .then(response => response.json())
+        .then(data => {
+            const form = document.getElementById('choiceForm');
+            form.elements['name'].value = data.name;
+            form.elements['description'].value = data.description;
+            form.elements['price_adjustment'].value = data.price_adjustment;
+            form.elements['is_available'].checked = data.is_available;
+            choiceModal.show();
+        })
+        .catch(error => showNotification('Error loading choice', 'error'));
+}
+
+function submitChoiceForm() {
+    const form = document.getElementById('choiceForm');
+    const formData = new FormData(form);
+    const url = currentEditId
+        ? `/restaurant-admin/menu/choice/${currentEditId}/edit/`
+        : '/restaurant-admin/menu/choice/add/';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(Object.fromEntries(formData))
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            choiceModal.hide();
+            showNotification('Choice saved successfully');
+            window.location.reload();
+        } else {
+            showFormErrors(form, data.errors);
         }
-        reader.readAsDataURL(input.files[0]);
+    })
+    .catch(error => showNotification('Error saving choice', 'error'));
+}
+
+function deleteChoice(choiceId) {
+    if (confirm('Are you sure you want to delete this choice? This cannot be undone.')) {
+        fetch(`/restaurant-admin/menu/choice/${choiceId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('Choice deleted successfully');
+                window.location.reload();
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => showNotification('Error deleting choice', 'error'));
     }
 }
-function filterMenuItems() {
-    const categoryId = document.getElementById('categoryFilter').value;
-    const rows = document.querySelectorAll('table tbody tr');
 
-    rows.forEach(row => {
-        if (categoryId === 'all') {
-            row.style.display = '';
+// Add-on Management Functions
+function showAddAddonModal() {
+    currentEditId = null;
+    document.querySelector('#addonModal .modal-title').textContent = 'Add Add-on';
+    document.getElementById('addonForm').reset();
+    addonModal.show();
+}
+
+function editAddon(addonId) {
+    currentEditId = addonId;
+    document.querySelector('#addonModal .modal-title').textContent = 'Edit Add-on';
+
+    fetch(`/restaurant-admin/menu/addon/${addonId}/get/`)
+        .then(response => response.json())
+        .then(data => {
+            const form = document.getElementById('addonForm');
+            form.elements['name'].value = data.name;
+            form.elements['description'].value = data.description;
+            form.elements['price'].value = data.price;
+            form.elements['is_available'].checked = data.is_available;
+            addonModal.show();
+        })
+        .catch(error => showNotification('Error loading add-on', 'error'));
+}
+
+function submitAddonForm() {
+    const form = document.getElementById('addonForm');
+    const formData = new FormData(form);
+    const url = currentEditId
+        ? `/restaurant-admin/menu/addon/${currentEditId}/edit/`
+        : '/restaurant-admin/menu/addon/add/';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(Object.fromEntries(formData))
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            addonModal.hide();
+            showNotification('Add-on saved successfully');
+            window.location.reload();
         } else {
-            const categoryCell = row.querySelector('td:nth-child(3)'); // Adjust if column position is different
-            const categoryName = categoryCell.textContent;
-            const belongsToCategory = row.getAttribute('data-category-id') === categoryId;
-            row.style.display = belongsToCategory ? '' : 'none';
+            showFormErrors(form, data.errors);
+        }
+    })
+    .catch(error => showNotification('Error saving add-on', 'error'));
+}
+
+function deleteAddon(addonId) {
+    if (confirm('Are you sure you want to delete this add-on? This cannot be undone.')) {
+        fetch(`/restaurant-admin/menu/addon/${addonId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('Add-on deleted successfully');
+                window.location.reload();
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => showNotification('Error deleting add-on', 'error'));
+    }
+}
+
+// Utility Functions
+function initializeImagePreview() {
+    document.querySelectorAll('input[type="file"]').forEach(input => {
+        input.addEventListener('change', function(e) {
+            const preview = document.getElementById('imagePreview');
+            const file = e.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+    });
+}
+
+function showFormErrors(form, errors) {
+    // Clear existing error messages
+    form.querySelectorAll('.error-message').forEach(el => el.remove());
+
+    // Add new error messages
+    Object.entries(errors).forEach(([field, messages]) => {
+        const input = form.elements[field];
+        if (input) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message text-danger mt-1';
+            errorDiv.textContent = messages.join(', ');
+            input.parentNode.appendChild(errorDiv);
         }
     });
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+    notification.style.zIndex = '1050';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+function filterMenuItems() {
+    const categoryId = document.getElementById('categoryFilter').value;
+    const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('tr[data-category-id]');
+
+    rows.forEach(row => {
+        const rowCategoryId = row.dataset.categoryId;
+        const rowText = row.textContent.toLowerCase();
+        const matchesCategory = categoryId === 'all' || rowCategoryId === categoryId;
+        const matchesSearch = searchQuery === '' || rowText.includes(searchQuery);
+
+        row.style.display = matchesCategory && matchesSearch ? '' : 'none';
+    });
+
+    updateItemCount();
+}
+
+function updateItemCount() {
+    const visibleItems = document.querySelectorAll('tr[data-category-id]:not([style*="display: none"])').length;
+    const noResultsMessage = document.getElementById('noResultsMessage');
+
+    if (noResultsMessage) {
+        noResultsMessage.style.display = visibleItems === 0 ? 'block' : 'none';
+    }
+}
+
+// Dynamic form field handling
+function updateChoiceFields(hasChoices) {
+    const requiresChoiceDiv = document.getElementById('requiresChoiceDiv');
+    const availableChoicesDiv = document.getElementById('availableChoicesDiv');
+
+    if (requiresChoiceDiv && availableChoicesDiv) {
+        requiresChoiceDiv.style.display = hasChoices ? 'block' : 'none';
+        availableChoicesDiv.style.display = hasChoices ? 'block' : 'none';
+
+        if (!hasChoices) {
+            document.getElementById('requires_choice').checked = false;
+            document.querySelectorAll('#available_choices option:checked').forEach(option => {
+                option.selected = false;
+            });
+        }
+    }
+}
+
+// Handle price calculations
+function updateTotalPrice(basePrice, choiceId = null, addons = []) {
+    let total = parseFloat(basePrice);
+
+    // Add choice price adjustment if selected
+    if (choiceId) {
+        const choiceSelect = document.querySelector(`select[name="choice"] option[value="${choiceId}"]`);
+        if (choiceSelect) {
+            total += parseFloat(choiceSelect.dataset.priceAdjust || 0);
+        }
+    }
+
+    // Add selected add-ons
+    addons.forEach(addonId => {
+        const addonCheckbox = document.querySelector(`input[name="addons"][value="${addonId}"]`);
+        if (addonCheckbox && addonCheckbox.checked) {
+            total += parseFloat(addonCheckbox.dataset.price || 0);
+        }
+    });
+
+    // Update display
+    const totalPriceElement = document.getElementById('totalPrice');
+    if (totalPriceElement) {
+        totalPriceElement.textContent = total.toFixed(2);
+    }
+}
+
+// Validation functions
+function validateMenuItemForm() {
+    const form = document.getElementById('menuItemForm');
+    const hasChoices = form.elements['has_choices'].checked;
+    const requiresChoice = form.elements['requires_choice'].checked;
+    const availableChoices = Array.from(form.elements['available_choices'].selectedOptions);
+
+    if (hasChoices && requiresChoice && availableChoices.length === 0) {
+        showNotification('Please select at least one choice option when choices are required', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+function validatePriceField(input) {
+    const value = parseFloat(input.value);
+    if (isNaN(value) || value < 0) {
+        input.setCustomValidity('Please enter a valid positive number');
+    } else {
+        input.setCustomValidity('');
+    }
 }
 </script>
 {% endblock %}

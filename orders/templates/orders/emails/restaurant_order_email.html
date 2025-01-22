@@ -2,126 +2,230 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>New Pickup Order - Royal Nepal Restaurant</title>
+    <title>New Order Received - Royal Nepal Restaurant</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f5f5f5;
+            background-color: #f9f9f9;
+            color: #333;
         }
-        .container {
+        .email-container {
             max-width: 600px;
-            margin: 0 auto;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #ce1212;
             padding: 20px;
-            background-color: white;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
-        h2, h3, h4 {
+        .logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            color: white;
+            margin: 0;
+            font-size: 24px;
+        }
+        .urgent-banner {
+            background-color: #ffc107;
+            color: #000;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .content {
+            padding: 30px;
+        }
+        .order-meta {
+            background-color: #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .section-title {
             color: #ce1212;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0 10px;
+            display: flex;
+            align-items: center;
         }
-        table {
+        .section-title i {
+            margin-right: 10px;
+        }
+        .order-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
+            margin: 15px 0;
         }
-        th, td {
-            padding: 10px;
+        .order-table th, .order-table td {
+            padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border: 1px solid #eee;
         }
-        .urgent {
-            color: #dc3545;
-            font-weight: bold;
+        .order-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .customization-details {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .special-instructions {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
         }
         .payment-info {
-            background-color: #fff3cd;
+            background-color: #d1e7dd;
+            border-radius: 6px;
             padding: 15px;
-            border-radius: 5px;
+            margin: 15px 0;
         }
-        .total {
+        .total-row {
             font-weight: bold;
+            font-size: 1.1em;
+            background-color: #f8f9fa;
+        }
+        .action-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ce1212;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>New Pickup Order - Order #{{ order.id }}</h2>
-        <p class="urgent">New order requires immediate attention!</p>
+    <div class="email-container">
+        <div class="header">
+            <img src="{{ logo_url }}" alt="Royal Nepal Logo" class="logo">
+            <h1>New Order Received</h1>
+        </div>
 
-        <div class="order-details">
-            <h3>Customer Information:</h3>
+        <div class="content">
+            <div class="order-meta">
+                <h3>Order #{{ order.id }}</h3>
+                <p><strong>Time:</strong> {{ order.created_at|date:"F j, Y, g:i a" }}</p>
+                <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
+                <p><strong>Payment Status:</strong> {{ order.get_payment_status_display }}</p>
+            </div>
+
+            <div class="section-title">
+                <i class="bi bi-person"></i> Customer Information
+            </div>
             <p><strong>Name:</strong> {{ order.name }}</p>
             <p><strong>Phone:</strong> {{ order.phone }}</p>
             <p><strong>Email:</strong> {{ order.email }}</p>
 
+            <div class="section-title">
+                <i class="bi bi-cart"></i> Order Items
+            </div>
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Customizations</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                    <tr>
+                        <td><strong>{{ item.menu_item.name }}</strong></td>
+                        <td>{{ item.quantity }}</td>
+                        <td>
+                            {% if item.choice %}
+                            <div class="customization-details">
+                                <strong>Choice:</strong> {{ item.choice.name }}
+                                {% if item.choice.price_adjustment > 0 %}
+                                (+${{ item.choice.price_adjustment }})
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% if item.addons.exists %}
+                            <div class="customization-details">
+                                <strong>Add-ons:</strong>
+                                {% for addon in item.addons.all %}
+                                    {{ addon.name }} (+${{ addon.price }})
+                                    {% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if item.special_instructions %}
+                            <div class="customization-details">
+                                <strong>Note:</strong> {{ item.special_instructions }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>${{ item.get_cost }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if order.special_instructions %}
+            <div class="special-instructions">
+                <strong>Special Instructions:</strong><br>
+                {{ order.special_instructions }}
+            </div>
+            {% endif %}
+
             <div class="payment-info">
-                <h4>Payment Information</h4>
-                <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
-                <p><strong>Payment Status:</strong> {% if order.payment_status == 'paid' %}Paid{% else %}Payment Pending{% endif %}</p>
-                {% if order.payment_method == 'in_store' %}
-                <p class="urgent">Customer will pay at pickup</p>
-                {% endif %}
+                <table class="order-table">
+                    <tr>
+                        <td>Subtotal</td>
+                        <td>${{ order.calculate_subtotal }}</td>
+                    </tr>
+                    <tr>
+                        <td>Tax (13%)</td>
+                        <td>${{ order.calculate_tax }}</td>
+                    </tr>
+                    {% if order.tip_amount > 0 %}
+                    <tr>
+                        <td>Tip</td>
+                        <td>${{ order.tip_amount }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if order.rewards_used > 0 %}
+                    <tr>
+                        <td>Rewards Applied</td>
+                        <td>-${{ order.rewards_used }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="total-row">
+                        <td>Total</td>
+                        <td>${{ order.total_amount }}</td>
+                    </tr>
+                </table>
             </div>
 
-            <h3>Order Details:</h3>
-            <table>
-                <tr>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                </tr>
-                {% for item in order.items.all %}
-                <tr>
-                    <td>{{ item.menu_item.name }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>${{ item.price }}</td>
-                    <td>${{ item.get_cost }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-
-            <table class="total-table" style="margin-top: 20px; width: 300px; float: right;">
-                <tr>
-                    <td class="total">Subtotal:</td>
-                    <td class="total" style="text-align: right;">${{ order.calculate_subtotal }}</td>
-                </tr>
-                <tr>
-                    <td class="total">Tax (13%):</td>
-                    <td class="total" style="text-align: right;">${{ order.calculate_tax }}</td>
-                </tr>
-                {% if order.tip_amount > 0 %}
-                <tr>
-                    <td class="total">Tip:</td>
-                    <td class="total" style="text-align: right;">${{ order.tip_amount }}</td>
-                </tr>
-                {% endif %}
-                {% if order.rewards_used > 0 %}
-                <tr>
-                    <td>Rewards Applied:</td>
-                    <td style="text-align: right; color: #198754;">-${{ order.rewards_used }}</td>
-                </tr>
-                {% endif %}
-                <tr>
-                    <td style="font-weight: bold;">Total:</td>
-                    <td style="text-align: right; font-weight: bold;">${{ order.total_amount }}</td>
-                </tr>
-            </table>
+            <a href="{{ admin_url }}" class="action-button">
+                View Order in Admin Panel
+            </a>
         </div>
 
-        {% if order.special_instructions %}
-        <div class="special-instructions">
-            <h3>Special Instructions:</h3>
-            <p>{{ order.special_instructions }}</p>
-        </div>
-        {% endif %}
-
-        <p class="urgent">Please start preparing this order for pickup!</p>
-
-        <div class="order-actions" style="margin-top: 20px;">
-            <p>Update order status at: <a href="{{ admin_url }}/orders/order/{{ order.id }}/change/">Admin Panel</a></p>
+        <div class="footer">
+            <p>This is an automated message from your restaurant ordering system.</p>
         </div>
     </div>
 </body>

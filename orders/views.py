@@ -10,7 +10,7 @@ from django.urls import reverse
 from accounts.models import Transaction
 from restaurant_admin.models import StoreStatus
 from .models import Order, OrderItem
-from menu.models import MenuItem
+from menu.models import MenuItem, ItemAddon, ItemChoice
 import json
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
@@ -44,6 +44,8 @@ def send_order_confirmation_email(order):
         'order': order,
         'tax_amount': tax_amount,
         'total_with_tax': total_with_tax,
+        'logo_url': 'https://yoursite.com/static/img/logo.png',  # Update with your logo URL
+        'admin_url': f'https://yoursite.com/restaurant-admin/order/{order.id}/',  # Update with your admin URL
     }
 
     # Customer email
@@ -76,26 +78,79 @@ def send_order_confirmation_email(order):
 
 
 def cart_detail(request):
-    #print("\n=== Cart Detail View ===")
     cart = request.session.get('cart', {})
-    #print(f"Cart items: {len(cart)}")
     cart_items = []
     cart_total = Decimal('0.00')
+    invalid_items = []
 
-    for item_id, item_data in cart.items():
-        menu_item = get_object_or_404(MenuItem, id=item_id)
-        quantity = item_data.get('quantity', 0)
-        item_total = menu_item.price * Decimal(str(quantity))
-        cart_total += item_total
-        cart_items.append({
-            'menu_item': menu_item,
-            'quantity': quantity,
-            'total_price': item_total
-        })
-    # print(f"Cart total: ${cart_total}")
-    # print("=== Cart Detail Complete ===\n")
+    for item_key, item_data in cart.items():
+        try:
+            # Split the composite key carefully
+            parts = item_key.split('_')
 
-    # Calculate tax and total with proper Decimal handling
+            # Ensure we have at least the item ID
+            if len(parts) >= 1:
+                item_id = parts[0]
+                try:
+                    menu_item = MenuItem.objects.get(id=item_id)
+
+                    # Get the stored price from cart data
+                    item_price = Decimal(str(item_data.get('price', menu_item.price)))
+                    quantity = item_data.get('quantity', 1)
+                    item_total = item_price * quantity
+                    cart_total += item_total
+
+                    # Prepare customization details
+                    choice_name = None
+                    choice = None
+                    if item_data.get('choice_id'):
+                        try:
+                            choice = ItemChoice.objects.get(id=item_data['choice_id'])
+                            choice_name = choice.name
+                        except ItemChoice.DoesNotExist:
+                            pass
+
+                    # Prepare addon details
+                    addon_names = []
+                    addons = []
+                    if item_data.get('addon_ids'):
+                        addon_ids = item_data['addon_ids']
+                        for addon_id in addon_ids:
+                            try:
+                                addon = ItemAddon.objects.get(id=addon_id)
+                                addons.append(addon)
+                                addon_names.append(addon.name)
+                            except ItemAddon.DoesNotExist:
+                                pass
+
+                    cart_items.append({
+                        'menu_item': menu_item,
+                        'quantity': quantity,
+                        'price': item_price,
+                        'total_price': item_total,
+                        'choice_name': choice_name,
+                        'choice': choice,
+                        'addon_names': addon_names,
+                        'addons': addons,
+                        'special_instructions': item_data.get('special_instructions', ''),
+                        'key': item_key  # Store the original key
+                    })
+                except MenuItem.DoesNotExist:
+                    invalid_items.append(item_key)
+                    continue
+
+        except Exception as e:
+            print(f"Error processing cart item {item_key}: {str(e)}")
+            invalid_items.append(item_key)
+            continue
+
+    # Remove invalid items from cart
+    if invalid_items:
+        for item_key in invalid_items:
+            cart.pop(item_key, None)
+        request.session['cart'] = cart
+        request.session.modified = True
+
     tax_rate = Decimal('0.13')
     tax_amount = round(cart_total * tax_rate, 2)
     total_with_tax = cart_total + tax_amount
@@ -106,8 +161,6 @@ def cart_detail(request):
         'tax_amount': tax_amount,
         'total_with_tax': total_with_tax
     })
-
-
 def check_store_status(request):
     try:
         #print("\n=== Checking Store Status -orders===")
@@ -126,11 +179,11 @@ def check_store_status(request):
 
         # Get store status from admin settings
         status_obj = StoreStatus.objects.first()  # Changed from get_current_status()
-        #print(f"Retrieved status object: {status_obj}")
+        # print(f"Retrieved status object: {status_obj}")
 
         if not status_obj:
             # Create default status if none exists
-            #print("No status found, creating default open status")
+            # print("No status found, creating default open status")
             status_obj = StoreStatus.objects.create(status='open')
 
         # print(f"Current store status: {status_obj.status}")
@@ -175,7 +228,7 @@ def checkout(request):
     store_status = StoreStatus.get_current_status()
     current_time = timezone.localtime()
 
-    # Store status checks (keeping your existing checks)
+    # Store status checks
     if store_status == 'closed':
         messages.error(request, 'Store is currently closed.')
         return redirect('orders:cart_detail')
@@ -190,22 +243,64 @@ def checkout(request):
         return redirect('menu:menu_list')
 
     try:
-        # Calculate cart totals (keeping your existing calculation)
+        # Calculate cart totals with precise processing
         cart_items = []
         cart_total = Decimal('0.00')
-        for item_id, item_data in cart.items():
-            menu_item = get_object_or_404(MenuItem, id=item_id)
-            quantity = item_data.get('quantity', 0)
-            total_price = menu_item.price * Decimal(str(quantity))
-            cart_total += total_price
-            cart_items.append({
-                'menu_item': menu_item,
-                'quantity': quantity,
-                'total_price': total_price
-            })
+
+        for item_key, item_data in cart.items():
+            # Carefully extract item ID
+            try:
+                parts = item_key.split('_')
+                item_id = parts[0]
+
+                menu_item = MenuItem.objects.get(id=item_id)
+
+                # Get the stored price from cart data
+                item_price = Decimal(str(item_data.get('price', menu_item.price)))
+                quantity = item_data.get('quantity', 1)
+                item_total = item_price * quantity
+                cart_total += item_total
+
+                # Prepare choice details
+                choice = None
+                choice_name = None
+                if item_data.get('choice_id'):
+                    try:
+                        choice = ItemChoice.objects.get(id=item_data['choice_id'])
+                        choice_name = choice.name
+                        #item_total += Decimal(str(choice.price_adjustment)) * quantity
+                    except ItemChoice.DoesNotExist:
+                        pass
+
+                # Prepare addon details
+                addons = []
+                addon_names = []
+                if item_data.get('addon_ids'):
+                    for addon_id in item_data['addon_ids']:
+                        try:
+                            addon = ItemAddon.objects.get(id=addon_id)
+                            addons.append(addon)
+                            addon_names.append(addon.name)
+                            #item_total += Decimal(str(addon.price)) * quantity
+                        except ItemAddon.DoesNotExist:
+                            pass
+
+                cart_items.append({
+                    'menu_item': menu_item,
+                    'quantity': quantity,
+                    'price': item_price,
+                    'total_price': item_total,
+                    'choice': choice,
+                    'choice_name': choice_name,
+                    'addons': addons,
+                    'addon_names': addon_names,
+                    'special_instructions': item_data.get('special_instructions', '')
+                })
+            except MenuItem.DoesNotExist:
+                continue
 
         tax_rate = Decimal('0.13')
-        tax_amount = cart_total * tax_rate
+        tax_amount = round(cart_total * tax_rate, 2)
         total_with_tax = cart_total + tax_amount
 
         if request.method == 'POST':
@@ -235,7 +330,10 @@ def checkout(request):
                         'customer_email': data.get('email'),
                         'cart_items': json.dumps([{
                             'item_id': str(item['menu_item'].id),
-                            'quantity': item['quantity']
+                            'quantity': item['quantity'],
+                            'choice_id': item['choice'].id if item['choice'] else None,
+                            'addon_ids': [addon.id for addon in item['addons']] if item['addons'] else [],
+                            'special_instructions': item['special_instructions']
                         } for item in cart_items]),
                         'tip_amount': str(tip_amount),
                         'rewards_used': str(rewards_used),
@@ -280,15 +378,23 @@ def checkout(request):
                     payment_status='pending'
                 )
 
-                # Create order items
+                # Create order items with full customization details
                 for item in cart_items:
-                    OrderItem.objects.create(
+                    order_item = OrderItem.objects.create(
                         order=order,
                         menu_item=item['menu_item'],
                         quantity=item['quantity'],
-                        price=item['menu_item'].price
+                        price=item['price']
                     )
 
+                    # Add choice if exists
+                    if item['choice']:
+                        order_item.choice = item['choice']
+                        order_item.save()
+
+                    # Add addons if exists
+                    if item['addons']:
+                        order_item.addons.add(*item['addons'])
 
                 profile = request.user.profile
                 profile.rewards_balance -= rewards_used
@@ -300,10 +406,10 @@ def checkout(request):
 
                 order.save()
 
-                # Clear cart and continue with your existing notification logic
+                # Clear cart
                 request.session['cart'] = {}
 
-                # Send admin notification (keeping your existing notification code)
+                # Send admin notification
                 try:
                     notify_admin("new_order", {
                         "id": order.id,
@@ -339,6 +445,7 @@ def checkout(request):
 
     except Exception as e:
         messages.error(request, f'An error occurred: {str(e)}')
+        print("Error occurred: ", str(e))
         return redirect('orders:cart_detail')
 
 @login_required
@@ -536,15 +643,34 @@ def payment_success(request):
                 payment_status='paid'
             )
 
-            # Create order items
+            # Create order items with choices and addons
             for item_data in cart_items:
                 menu_item = get_object_or_404(MenuItem, id=item_data['item_id'])
-                OrderItem.objects.create(
+                order_item = OrderItem.objects.create(
                     order=order,
                     menu_item=menu_item,
                     quantity=item_data['quantity'],
-                    price=menu_item.price
+                    price=menu_item.price,
+                    special_instructions=item_data.get('special_instructions', '')
                 )
+
+                # Add choice if selected
+                if item_data.get('choice_id'):
+                    try:
+                        choice = menu_item.available_choices.get(id=item_data['choice_id'])
+                        order_item.choice = choice
+                        order_item.save()
+                    except ItemChoice.DoesNotExist:
+                        pass
+
+                # Add addons if selected
+                if item_data.get('addon_ids'):
+                    for addon_id in item_data['addon_ids']:
+                        try:
+                            addon = menu_item.available_addons.get(id=addon_id)
+                            order_item.addons.add(addon)
+                        except ItemAddon.DoesNotExist:
+                            pass
 
             # Create transaction record
             Transaction.objects.create(
@@ -565,10 +691,9 @@ def payment_success(request):
 
             # Clear cart
             request.session['cart'] = {}
-            print(f"Rewards used: {rewards_used}")
-            # Send admin notification -websocket
+
+            # Send admin notification
             try:
-                # After successful order creation
                 notify_admin("new_order", {
                     "id": order.id,
                     "time": order.created_at.strftime("%H:%M"),
@@ -587,11 +712,12 @@ def payment_success(request):
             except Exception as e:
                 print(f"Error sending confirmation email: {e}")
 
-
-
             messages.success(request, 'Payment successful! Your order has been confirmed.')
             return redirect('orders:order_success', order_id=order.id)
 
+    except stripe.error.StripeError as e:
+        messages.error(request, f'Payment verification failed: {str(e)}')
+        return redirect('orders:cart_detail')
     except Exception as e:
         messages.error(request, f'An error occurred: {str(e)}')
         return redirect('orders:cart_detail')

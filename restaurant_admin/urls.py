@@ -24,15 +24,30 @@ urlpatterns = [
 
     # Menu Management URLs
     path('menu/', views.food_menu, name='food_menu'),
+
+    # Category Management
     path('menu/category/add/', views.add_category, name='add_category'),
     path('menu/category/<int:category_id>/edit/', views.edit_category, name='edit_category'),
     path('menu/category/<int:category_id>/delete/', views.delete_category, name='delete_category'),
 
+    # Menu Item Management
     path('menu/item/add/', views.add_menu_item, name='add_menu_item'),
     path('menu/item/<int:item_id>/get/', views.get_menu_item, name='get_menu_item'),
     path('menu/item/<int:item_id>/edit/', views.edit_menu_item, name='edit_menu_item'),
     path('menu/item/<int:item_id>/delete/', views.delete_menu_item, name='delete_menu_item'),
     path('menu/item/<int:item_id>/toggle/', views.toggle_menu_item, name='toggle_menu_item'),
+
+    # Choice Management
+    path('menu/choice/add/', views.add_choice, name='add_choice'),
+    path('menu/choice/<int:choice_id>/get/', views.get_choice, name='get_choice'),
+    path('menu/choice/<int:choice_id>/edit/', views.edit_choice, name='edit_choice'),
+    path('menu/choice/<int:choice_id>/delete/', views.delete_choice, name='delete_choice'),
+
+    # Add-on Management
+    path('menu/addon/add/', views.add_addon, name='add_addon'),
+    path('menu/addon/<int:addon_id>/get/', views.get_addon, name='get_addon'),
+    path('menu/addon/<int:addon_id>/edit/', views.edit_addon, name='edit_addon'),
+    path('menu/addon/<int:addon_id>/delete/', views.delete_addon, name='delete_addon'),
 
     #customer management
     path('customers/', views.customer_management, name='customer_management'),

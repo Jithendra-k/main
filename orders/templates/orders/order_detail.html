@@ -52,7 +52,35 @@
                                     <tbody>
                                         {% for item in order.items.all %}
                                         <tr>
-                                            <td>{{ item.menu_item.name }}</td>
+                                            <td>
+                                                {{ item.menu_item.name }}
+                                                {% if item.choice %}
+                                                <br>
+                                                <small class="text-muted">
+                                                    Choice: {{ item.choice.name }}
+                                                    {% if item.choice.price_adjustment > 0 %}
+                                                    (+${{ item.choice.price_adjustment }})
+                                                    {% endif %}
+                                                </small>
+                                                {% endif %}
+                                                {% if item.addons.exists %}
+                                                <br>
+                                                <small class="text-muted">
+                                                    Add-ons:
+                                                    {% for addon in item.addons.all %}
+                                                        {{ addon.name }} (+${{ addon.price }})
+                                                        {% if not forloop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                </small>
+                                                {% endif %}
+                                                {% if item.special_instructions %}
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-info-circle"></i>
+                                                    {{ item.special_instructions }}
+                                                </small>
+                                                {% endif %}
+                                            </td>
                                             <td>{{ item.quantity }}</td>
                                             <td>${{ item.price }}</td>
                                             <td>${{ item.get_cost }}</td>
@@ -62,7 +90,6 @@
                                 </table>
                             </div>
                         </div>
-
                         <!-- Order Summary -->
                         <div class="order-summary mb-4">
                             <div class="card bg-light">

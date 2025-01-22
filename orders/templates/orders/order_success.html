@@ -30,7 +30,22 @@
                                 <h5>Order Summary</h5>
                                 {% for item in order.items.all %}
                                 <div class="d-flex justify-content-between mb-2">
-                                    <span>{{ item.menu_item.name }} × {{ item.quantity }}</span>
+                                    <span>
+                                        {{ item.menu_item.name }} × {{ item.quantity }}
+                                        {% if item.choice %}
+                                        <small class="text-muted">
+                                            ({{ item.choice.name }})
+                                        </small>
+                                        {% endif %}
+                                        {% if item.addons.exists %}
+                                        <small class="text-muted">
+                                            + {% for addon in item.addons.all %}
+                                                {{ addon.name }}(+${{ addon.price }})
+                                                {% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </small>
+                                        {% endif %}
+                                    </span>
                                     <span>${{ item.get_cost }}</span>
                                 </div>
                                 {% endfor %}

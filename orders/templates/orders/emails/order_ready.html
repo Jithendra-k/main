@@ -2,70 +2,201 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Your Order is Ready for Pickup</title>
+    <title>Your Order is Ready for Pickup - Royal Nepal Restaurant</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
         }
-        .container {
+        .email-container {
             max-width: 600px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
         .header {
+            background-color: #ce1212;
+            padding: 20px;
             text-align: center;
-            color: #ce1212;
-            margin-bottom: 20px;
+        }
+        .logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            color: white;
+            margin: 0;
+            font-size: 24px;
+        }
+        .ready-banner {
+            background-color: #28a745;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .content {
+            padding: 30px;
+        }
+        .pickup-info {
+            background-color: #e8f5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+        }
+        .pickup-info h3 {
+            color: #28a745;
+            margin-top: 0;
         }
         .order-details {
             background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .section-title {
+            color: #ce1212;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0 10px;
+        }
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .order-table th, .order-table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #eee;
+        }
+        .order-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .customization-details {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .map-button {
+            display: inline-block;
+            background-color: #ce1212;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .important-note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
             padding: 15px;
-            border-radius: 5px;
             margin: 20px 0;
         }
         .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
             text-align: center;
-            margin-top: 20px;
             color: #666;
+            font-size: 14px;
+        }
+        .social-links {
+            margin-top: 15px;
+        }
+        .social-links a {
+            color: #ce1212;
+            text-decoration: none;
+            margin: 0 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="email-container">
         <div class="header">
-            <h2>Your Order is Ready for Pickup!</h2>
+            <img src="{{ logo_url }}" alt="Royal Nepal Logo" class="logo">
+            <h1>Your Order is Ready!</h1>
         </div>
 
-        <p>Dear {{ order.name }},</p>
-
-        <p>Great news! Your order #{{ order.id }} is now ready for pickup at Royal Nepal Restaurant.</p>
-
-        <div class="order-details">
-            <h3>Order Details:</h3>
-            <ul>
-                {% for item in order.items.all %}
-                <li>{{ item.menu_item.name }} x {{ item.quantity }}</li>
-                {% endfor %}
-            </ul>
-            <p><strong>Total Amount:</strong> ${{ order.total_amount }}</p>
+        <div class="ready-banner">
+            🎉 Ready for Pickup 🎉
         </div>
 
-        <p><strong>Pickup Location:</strong><br>
-        Royal Nepal Restaurant<br>
-        [Restaurant Address]<br>
-        Phone: (555) 123-4567</p>
+        <div class="content">
+            <p>Hi {{ order.name }},</p>
+            <p>Great news! Your order #{{ order.id }} is now ready for pickup at Royal Nepal Restaurant.</p>
 
-        <p>Please note that your order will be kept warm for pickup within the next hour.</p>
+            <div class="pickup-info">
+                <h3>📍 Pickup Location</h3>
+                <p><strong>Royal Nepal Restaurant</strong><br>
+                A108 Adam Street<br>
+                New York, NY 535022</p>
+                <p><strong>Phone:</strong> +1 5589 55488 55</p>
+                <a href="https://maps.google.com/?q=Royal+Nepal+Restaurant" class="map-button" target="_blank">
+                    Open in Maps
+                </a>
+            </div>
+
+            <div class="order-details">
+                <div class="section-title">Order Summary</div>
+                <table class="order-table">
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td>
+                                {{ item.quantity }}x {{ item.menu_item.name }}
+                                {% if item.choice or item.addons.exists %}
+                                <div class="customization-details">
+                                    {% if item.choice %}
+                                        Choice: {{ item.choice.name }}<br>
+                                    {% endif %}
+                                    {% if item.addons.exists %}
+                                        Add-ons: {% for addon in item.addons.all %}
+                                            {{ addon.name }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="important-note">
+                    <strong>Important:</strong>
+                    <ul style="margin: 5px 0;">
+                        <li>Your order will be kept warm for the next hour</li>
+                        <li>Please bring a form of ID if picking up an order with alcohol</li>
+                        <li>If paying at pickup, please have your payment ready</li>
+                    </ul>
+                </div>
+
+                {% if order.payment_method == 'in_store' %}
+                <div class="payment-info" style="margin-top: 15px;">
+                    <strong>Payment Due at Pickup:</strong> ${{ order.total_amount }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
 
         <div class="footer">
             <p>Thank you for choosing Royal Nepal Restaurant!</p>
-            <p>If you have any questions, please don't hesitate to contact us.</p>
+            <p>Questions? Contact us at info@royalnepal.com</p>
+            <div class="social-links">
+                <a href="#">Facebook</a>
+                <a href="#">Instagram</a>
+                <a href="#">Twitter</a>
+            </div>
         </div>
     </div>
 </body>

@@ -125,15 +125,46 @@
                             <thead>
                                 <tr>
                                     <th>Item</th>
+                                    <th>Customizations</th>
                                     <th>Quantity</th>
                                     <th>Price</th>
-                                    <th>Subtotal</th>
+                                    <th>Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in order.items.all %}
                                 <tr>
                                     <td>{{ item.menu_item.name }}</td>
+                                    <td>
+                                        {% if item.choice %}
+                                            <div class="mb-1">
+                                                <span class="badge bg-info">
+                                                    Choice: {{ item.choice.name }}
+                                                    {% if item.choice.price_adjustment > 0 %}
+                                                        (+${{ item.choice.price_adjustment }})
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        {% endif %}
+                                        {% if item.addons.exists %}
+                                            <div class="mb-1">
+                                                {% for addon in item.addons.all %}
+                                                    <span class="badge bg-secondary">
+                                                        {{ addon.name }} (+${{ addon.price }})
+                                                    </span>
+                                                    {% if not forloop.last %} {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if item.special_instructions %}
+                                            <div class="mt-1">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-info-circle"></i>
+                                                    {{ item.special_instructions }}
+                                                </small>
+                                            </div>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ item.quantity }}</td>
                                     <td>${{ item.price }}</td>
                                     <td>${{ item.get_cost }}</td>
@@ -147,7 +178,37 @@
         </div>
     </div>
 </div>
+<style>
+.badge {
+    font-weight: normal;
+    padding: 0.4em 0.8em;
+    margin-right: 0.2em;
+}
 
+.text-muted {
+    font-size: 0.9em;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.customizations-cell {
+    max-width: 250px;
+}
+
+.badge.bg-info {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+    color: #0dcaf0;
+    border: 1px solid #0dcaf0;
+}
+
+.badge.bg-secondary {
+    background-color: rgba(108, 117, 125, 0.1) !important;
+    color: #6c757d;
+    border: 1px solid #6c757d;
+}
+</style>
 <script>
 document.querySelectorAll('.order-status-btn').forEach(btn => {
     btn.addEventListener('click', function() {

@@ -1,7 +1,7 @@
 # orders/models.py
 from django.db import models
 from django.contrib.auth.models import User
-from menu.models import MenuItem
+from menu.models import MenuItem, ItemChoice, ItemAddon
 from decimal import Decimal
 from django.utils.timezone import now
 from django.utils import timezone
@@ -138,11 +138,20 @@ class OrderItem(models.Model):
     menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    choice = models.ForeignKey(ItemChoice, null=True, blank=True, on_delete=models.SET_NULL)
+    addons = models.ManyToManyField(ItemAddon, blank=True)
+    special_instructions = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.quantity}x {self.menu_item.name} in Order #{self.order.id}"
 
     def get_cost(self):
-        return self.price * self.quantity
+        total = self.price * self.quantity
+        if self.choice:
+            total += self.choice.price_adjustment * self.quantity  # Multiply by quantity
+        if self.addons.exists():  # Check if there are any addons
+            addon_total = sum(addon.price for addon in self.addons.all())
+            total += addon_total * self.quantity  # Multiply total addons price by quantity
+        return total
 
 

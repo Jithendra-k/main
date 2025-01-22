@@ -12,69 +12,88 @@
         {% if cart_items %}
             <div class="row">
                 <div class="col-lg-8">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Quantity</th>
-                                    <th>Price</th>
-                                    <th>Total</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in cart_items %}
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            {% if item.menu_item.image %}
-                                                <img src="{{ item.menu_item.image.url }}"
-                                                     alt="{{ item.menu_item.name }}"
-                                                     class="me-3"
-                                                     style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
-                                            {% endif %}
-                                            <div>
-                                                <h6 class="mb-0">{{ item.menu_item.name }}</h6>
-                                                <small class="text-muted">{{ item.menu_item.description|truncatechars:50 }}</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <button class="btn btn-sm btn-outline-secondary me-2"
-                                                    onclick="updateQuantity({{ item.menu_item.id }}, -1)">-</button>
-                                            <span class="quantity">{{ item.quantity }}</span>
-                                            <button class="btn btn-sm btn-outline-secondary ms-2"
-                                                    onclick="updateQuantity({{ item.menu_item.id }}, 1)">+</button>
-                                        </div>
-                                    </td>
-                                    <td>${{ item.menu_item.price }}</td>
-                                    <td>${{ item.total_price }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-danger"
-                                                onclick="removeFromCart({{ item.menu_item.id }})">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-                                    <td colspan="2"><strong>${{ cart_total }}</strong></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3" class="text-end"><strong>Tax (13%):</strong></td>
-                                    <td colspan="2"><strong>${{ tax_amount }}</strong></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                    <td colspan="2"><strong>${{ total_with_tax }}</strong></td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Customizations</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Total</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in cart_items %}
+                                        <tr class="cart-item-row" data-item-key="{{ item.key }}">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if item.menu_item.image %}
+                                                        <img src="{{ item.menu_item.image.url }}"
+                                                             alt="{{ item.menu_item.name }}"
+                                                             class="me-3"
+                                                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                                    {% endif %}
+                                                    <div>
+                                                        <h6 class="mb-0">{{ item.menu_item.name }}</h6>
+                                                        <small class="text-muted">{{ item.menu_item.description|truncatechars:50 }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if item.choice_name %}
+                                                    <div class="mb-1">
+                                                        <span class="badge bg-info">{{ item.choice_name }}</span>
+                                                    </div>
+                                                {% endif %}
+                                                {% if item.addon_names %}
+                                                    {% for addon in item.addon_names %}
+                                                        <span class="badge bg-secondary me-1">{{ addon }}</span>
+                                                    {% endfor %}
+                                                {% endif %}
+                                                {% if item.special_instructions %}
+                                                    <div class="mt-1">
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-info-circle"></i>
+                                                            {{ item.special_instructions }}
+                                                        </small>
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <button class="btn btn-sm btn-outline-secondary me-2"
+                                                            onclick="updateCartQuantity('{{ item.menu_item.id }}', -1)">-</button>
+                                                    <span class="quantity">{{ item.quantity }}</span>
+                                                    <button class="btn btn-sm btn-outline-secondary ms-2"
+                                                            onclick="updateCartQuantity('{{ item.menu_item.id }}', 1)">+</button>
+                                                </div>
+                                            </td>
+                                            <td>${{ item.menu_item.price }}</td>
+                                            <td>${{ item.total_price }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-danger" onclick="removeFromCart('{{ item.menu_item.id }}')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between mb-4">
+                                {% if cart_items %}
+                                    <button class="btn btn-outline-danger" onclick="emptyCart()">
+                                        <i class="bi bi-trash"></i> Empty Cart
+                                    </button>
+                                {% endif %}
+                            </div>
+                        <!-- Make sure you have a notification container -->
+                        <div id="notification-container" style="position: fixed; top: 20px; right: 20px; z-index: 1050;"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -95,33 +114,11 @@
                                 <strong>Total:</strong>
                                 <strong>${{ total_with_tax }}</strong>
                             </div>
-                            <!-- Modify your checkout button -->
-                            <div class="d-grid">
-                                <button onclick="checkStoreStatusAndCheckout()" class="btn btn-primary w-100">Proceed to Checkout</button>
-                            </div>
 
-                            <!-- Make sure you have this modal structure in your cart_detail.html -->
-                            <div class="modal fade" id="storeStatusModal" tabindex="-1">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Store Status</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div id="statusMessage"></div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-
-
-                            <a href="{% url 'menu:menu_list' %}"
-                               class="btn btn-outline-secondary w-100 mt-2">
+                            <button onclick="checkStoreStatusAndCheckout()" class="btn btn-primary w-100 mb-2">
+                                Proceed to Checkout
+                            </button>
+                            <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-secondary w-100">
                                 Continue Shopping
                             </a>
                         </div>
@@ -137,38 +134,88 @@
             </div>
         {% endif %}
     </div>
+
+    <!-- Store Status Modal -->
+    <div class="modal fade" id="storeStatusModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Store Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="statusMessage"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
+<style>
+.cart-section {
+    padding-top: 120px;
+}
 
+.cart-item-row img {
+    transition: transform 0.2s;
+}
 
+.cart-item-row:hover img {
+    transform: scale(1.05);
+}
 
+.quantity-controls .btn {
+    padding: 0.25rem 0.5rem;
+}
+
+.quantity-controls .btn i {
+    font-size: 0.875rem;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.btn-primary {
+    background-color: #ce1212;
+    border-color: #ce1212;
+}
+
+.btn-primary:hover {
+    background-color: #b01010;
+    border-color: #b01010;
+}
+
+@media (max-width: 991.98px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .cart-item-row td {
+        min-width: 100px;
+    }
+
+    .cart-item-row td:first-child {
+        min-width: 200px;
+    }
+}
+</style>
 
 {% block extra_js %}
 <script>
-
-// Update the checkStoreStatusAndCheckout function in cart_detail.html
-function checkStoreStatusAndCheckout() {
-    // Show loading state
-    const checkoutBtn = document.querySelector('button[onclick="checkStoreStatusAndCheckout()"]');
-    const originalText = checkoutBtn.innerHTML;
-    checkoutBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
-    checkoutBtn.disabled = true;
-
-    fetch('/order/check-store-status/', {  // Note the /order/ prefix
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json',
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Store status response:', data);  // Debug log
+async function checkStoreStatusAndCheckout() {
+    try {
+        const response = await fetch('/orders/check-store-status/');
+        const data = await response.json();
         const modal = new bootstrap.Modal(document.getElementById('storeStatusModal'));
         const messageDiv = document.getElementById('statusMessage');
 
@@ -186,51 +233,67 @@ function checkStoreStatusAndCheckout() {
                     <p>We're currently experiencing high order volume. Please try again after 30 minutes.</p>
                 </div>`;
             modal.show();
-        } else if (data.status === 'open') {
+        } else {
+            console.log("status: ",data.status);
             window.location.href = "{% url 'orders:checkout' %}";
         }
-    })
-    .catch(error => {
+    } catch (error) {
         console.error('Error checking store status:', error);
-        const modal = new bootstrap.Modal(document.getElementById('storeStatusModal'));
-        const messageDiv = document.getElementById('statusMessage');
-        messageDiv.innerHTML = `
-            <div class="alert alert-danger">
-                <h5><i class="bi bi-exclamation-triangle me-2"></i>Error</h5>
-                <p>There was an error checking store status. Please try again.</p>
-            </div>`;
-        modal.show();
-    })
-    .finally(() => {
-        // Reset button state
-        checkoutBtn.innerHTML = originalText;
-        checkoutBtn.disabled = false;
-    });
+    }
 }
 
-// Make sure modal is properly initialized
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if Bootstrap is loaded
-    if (typeof bootstrap === 'undefined') {
-        console.error('Bootstrap is not loaded');
+async function emptyCart() {
+    if (confirm('Are you sure you want to empty your cart? This cannot be undone.')) {
+        try {
+            // Save empty cart
+            await fetch('{% url "orders:save_cart" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({})
+            });
+
+            showNotification('Cart has been emptied', 'success');
+
+            // Reload page after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } catch (error) {
+            console.error('Error emptying cart:', error);
+            showNotification('Error emptying cart', 'error');
+        }
     }
-});
-function updateQuantity(itemId, delta) {
-    // Get current cart data
-    fetch('{% url "orders:get_cart" %}')
-        .then(response => response.json())
-        .then(cart => {
-            if (cart[itemId]) {
-                const newQuantity = (cart[itemId].quantity || 0) + delta;
-                if (newQuantity <= 0) {
-                    delete cart[itemId];
-                } else {
-                    cart[itemId].quantity = newQuantity;
-                }
+}
+
+async function updateCartQuantity(itemId, delta) {
+    // Get current cart
+    try {
+        const response = await fetch('{% url "orders:get_cart" %}');
+        let cart = await response.json();
+
+        // Find the correct item key in cart
+        const itemKey = Object.keys(cart).find(key => key.startsWith(itemId));
+
+        if (cart[itemKey]) {
+            const newQuantity = cart[itemKey].quantity + delta;
+
+            // Remove item if quantity becomes 0 or less
+            if (newQuantity <= 0) {
+                delete cart[itemKey];
+                showNotification('Item removed from cart', 'success');
+            } else if (newQuantity <= 10) { // Maximum quantity limit
+                cart[itemKey].quantity = newQuantity;
+                showNotification('Quantity updated', 'success');
+            }else {
+                showNotification('Maximum quantity is 10', 'warning');
+                return;
             }
 
             // Save updated cart
-            return fetch('{% url "orders:save_cart" %}', {
+            await fetch('{% url "orders:save_cart" %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -238,32 +301,111 @@ function updateQuantity(itemId, delta) {
                 },
                 body: JSON.stringify(cart)
             });
-        })
-        .then(() => {
-            // Reload the page to show updated cart
+
+            // Reload page to show updated cart
             window.location.reload();
-        });
+        }
+    } catch (error) {
+        console.error('Error updating quantity:', error);
+        showNotification('Error updating cart', 'error');
+    }
 }
 
-function removeFromCart(itemId) {
+async function removeFromCart(itemId) {
+    if (confirm('Are you sure you want to remove this item?')) {
+        try {
+            const response = await fetch('{% url "orders:get_cart" %}');
+            let cart = await response.json();
+
+            const itemKey = Object.keys(cart).find(key => key.startsWith(itemId));
+            if (itemKey) {
+                delete cart[itemKey];
+
+                await fetch('{% url "orders:save_cart" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify(cart)
+                });
+
+                showNotification('Item removed from cart', 'success');
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('Error removing item:', error);
+            showNotification('Error removing item', 'error');
+        }
+    }
+}
+
+// Notification function
+function showNotification(message, type = 'success') {
+    const container = document.getElementById('notification-container');
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.style.marginBottom = '10px';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+
+    // Add notification to container
+    container.appendChild(notification);
+
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 150);
+    }, 3000);
+}
+
+// Update cart badge when cart changes
+function updateCartBadge() {
     fetch('{% url "orders:get_cart" %}')
         .then(response => response.json())
         .then(cart => {
-            delete cart[itemId];
-
-            return fetch('{% url "orders:save_cart" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}',
-                },
-                body: JSON.stringify(cart)
-            });
+            const cartCount = Object.keys(cart).length;
+            const badge = document.getElementById('cart-count');
+            if (badge) {
+                badge.textContent = cartCount;
+                badge.style.display = cartCount > 0 ? 'inline-block' : 'none';
+            }
         })
-        .then(() => {
-            window.location.reload();
-        });
+        .catch(error => console.error('Error updating cart badge:', error));
 }
+
+// Initialize cart badge on page load
+document.addEventListener('DOMContentLoaded', updateCartBadge);
+
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .alert {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+});
+
 </script>
 {% endblock %}
 {% endblock %}

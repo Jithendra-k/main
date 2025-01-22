@@ -2,37 +2,9 @@
 {% load static %}
 
 {% block content %}
-
-<!-- Debug Information -->
-{% if debug %}
-<div class="container mt-3">
-    <div class="alert alert-info">
-        <h4>Debug Information:</h4>
-        <h5>Categories:</h5>
-        <ul>
-        {% for category in categories %}
-            <li>{{ category.name }} (Order: {{ category.display_order }})</li>
-        {% endfor %}
-        </ul>
-
-        <h5>Menu Items:</h5>
-        <ul>
-        {% for item in menu_items %}
-            <li>{{ item.name }} (Category: {{ item.category.name }})
-                {% if item.image %}
-                    - Image: {{ item.image.url }}
-                {% else %}
-                    - No image
-                {% endif %}
-            </li>
-        {% endfor %}
-        </ul>
-    </div>
-</div>
-{% endif %}
-
 <section class="menu-section section">
-    <div class="container">
+    <div class="container-fluid px-4">
+        <!-- Section Title -->
         <div class="section-title" data-aos="fade-up">
             <h2>Our Menu</h2>
             <p><span>Discover</span> <span class="description-title">Our Delicious Menu</span></p>
@@ -41,102 +13,174 @@
         <div class="row">
             <!-- Categories Sidebar -->
             <div class="col-lg-3">
-                <div class="category-sidebar sticky-top" style="top: 120px; z-index: 10;" data-aos="fade-up">
+                <div class="category-sidebar sticky-lg-top" style="top: 100px; z-index: 10;" data-aos="fade-up">
                     <div class="card">
                         <div class="card-body">
+                            <!-- Search Bar -->
+                            <div class="search-bar mb-3">
+                                <input type="text" class="form-control"
+                                       id="menuSearch"
+                                       placeholder="Search menu items..."
+                                       onkeyup="filterMenuItems()">
+                            </div>
+
+                            <!-- Categories List -->
                             <h5 class="card-title mb-3">Categories</h5>
                             <div class="list-group">
+                                <a href="#" class="list-group-item list-group-item-action active"
+                                   data-category="all" onclick="filterByCategory(event, 'all')">
+                                    All Items
+                                </a>
                                 {% for category in categories %}
-                                    <a href="#category-{{ category.slug }}" class="list-group-item list-group-item-action">
+                                    <a href="#" class="list-group-item list-group-item-action"
+                                       data-category="{{ category.id }}"
+                                       onclick="filterByCategory(event, '{{ category.id }}')">
                                         {{ category.name }}
+                                        <span class="badge bg-secondary float-end">
+                                            {{ category.items.count }}
+                                        </span>
                                     </a>
                                 {% endfor %}
+                            </div>
+
+                            <!-- Dietary Preferences -->
+                            <div class="mt-4">
+                                <h5 class="card-title mb-3">Preferences</h5>
+                                <div class="dietary-filters">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               id="vegetarian" onchange="filterMenuItems()">
+                                        <label class="form-check-label" for="vegetarian">
+                                            Vegetarian
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               id="gluten_free" onchange="filterMenuItems()">
+                                        <label class="form-check-label" for="gluten_free">
+                                            Gluten Free
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Spice Level Filter -->
+                            <div class="mt-4">
+                                <h5 class="card-title mb-3">Spice Level</h5>
+                                <div class="spice-filters">
+                                    {% for level, name in spice_levels %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                   value="{{ level }}" id="spice_{{ level }}"
+                                                   onchange="filterMenuItems()">
+                                            <label class="form-check-label" for="spice_{{ level }}">
+                                                {{ name }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Floating Cart -->
-                    <div class="card mt-4">
+                </div>
+            </div>
+
+            <!-- Menu Items Grid -->
+            <div class="col-lg-6">
+                <!-- Sort Options -->
+                <div class="sort-options mb-4" data-aos="fade-up">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="showing-results">
+                            Showing <span id="itemCount">0</span> items
+                        </div>
+                        <select class="form-select form-select-sm w-auto"
+                                onchange="sortMenuItems(this.value)">
+                            <option value="name">Sort by Name</option>
+                            <option value="price_asc">Price: Low to High</option>
+                            <option value="price_desc">Price: High to Low</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Menu Items -->
+                <div class="row g-4" id="menuItemsContainer" data-aos="fade-up">
+                    {% for item in menu_items %}
+                        <div class="col-md-6 menu-item"
+                             data-category="{{ item.category.id }}"
+                             data-price="{{ item.price }}"
+                             data-spice="{{ item.spice_level }}"
+                             data-vegetarian="{{ item.is_vegetarian|yesno:'true,false' }}"
+                             data-gluten-free="{{ item.is_gluten_free|yesno:'true,false' }}">
+                            {% include 'menu/menu_item.html' with item=item %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- No Results Message -->
+                <div id="noResults" class="text-center py-5" style="display: none;">
+                    <h3>No items found</h3>
+                    <p>Try adjusting your search or filters</p>
+                </div>
+            </div>
+
+            <!-- Add this in menu_list.html inside the cart summary section -->
+            <div class="col-lg-3">
+                <div class="cart-sidebar sticky-lg-top" style="top: 100px;">
+                    <div class="card" id="cartSummary">
                         <div class="card-body">
                             <h5 class="card-title">Your Cart</h5>
-                            <div id="cart-items"></div>
-                            <hr>
-                            <div class="d-flex justify-content-between">
-                                <strong>Total:</strong>
-                                <strong id="cart-total">$0.00</strong>
+                            <div id="cartItems">
+                                <!-- Cart items will be dynamically inserted here -->
                             </div>
-                            <button onclick="window.location.href='{% url 'orders:cart_detail' %}'"
-                                    class="btn btn-primary w-100 mt-3"
-                                    id="view-cart-btn"
+                            <hr>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal:</span>
+                                <span id="cartSubtotal">$0.00</span>
+                            </div>
+                            <button class="btn btn-primary w-100" id="viewCartBtn"
+                                    onclick="window.location.href='{% url 'orders:cart_detail' %}'"
                                     disabled>
                                 View Cart
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Menu Items -->
-            <div class="col-lg-9">
-                {% for category in categories %}
-                    <div id="category-{{ category.slug }}" class="menu-category mb-5" data-aos="fade-up">
-                        <h3 class="category-title mb-4">{{ category.name }}</h3>
-                        <p class="category-description mb-4">{{ category.description }}</p>
-
-                        <div class="row g-4">
-                            {% for item in menu_items %}
-                                {% if item.category == category %}
-                                    <div class="col-md-4">
-                                        <div class="card menu-item-card h-100">
-                                            {% if item.image %}
-                                                <img src="{{ item.image.url }}" class="card-img-top menu-item-image" alt="{{ item.name }}">
-                                            {% else %}
-                                                <img src="{% static 'img/menu-default.jpg' %}" class="card-img-top menu-item-image" alt="{{ item.name }}">
-                                            {% endif %}
-                                            <div class="card-body d-flex flex-column">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <h5 class="card-title">{{ item.name }}</h5>
-                                                    <span class="badge {% if item.spice_level == 'very_spicy' %}bg-danger{% elif item.spice_level == 'spicy' %}bg-warning{% elif item.spice_level == 'medium' %}bg-info{% endif %}">
-                                                        {{ item.get_spice_level_display }}
-                                                    </span>
-                                                </div>
-                                                <p class="card-text flex-grow-1">{{ item.description }}</p>
-                                                <div class="mt-3">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <span class="price">${{ item.price }}</span>
-                                                        {% if item.is_available %}
-                                                            <div class="quantity-control d-flex align-items-center">
-                                                                <button class="btn btn-outline-secondary btn-sm" onclick="updateCart({{ item.id }}, '{{ item.name }}', {{ item.price }}, -1)">-</button>
-                                                                <span id="quantity-{{ item.id }}" class="mx-2">0</span>
-                                                                <button class="btn btn-outline-secondary btn-sm" onclick="updateCart({{ item.id }}, '{{ item.name }}', {{ item.price }}, 1)">+</button>
-                                                            </div>
-                                                        {% else %}
-                                                            <span class="badge bg-secondary">Not Available</span>
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            {% endfor %}
+                    <!-- Template for cart items (hidden, used for cloning) -->
+                    <template id="cartItemTemplate">
+                        <div class="cart-item mb-2" data-item-key="">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 item-name"></h6>
+                                    <small class="text-muted item-details"></small>
+                                </div>
+                                <div class="quantity-controls d-flex align-items-center ms-2">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="updateCartQuantity(this, -1)">-</button>
+                                    <span class="mx-2 item-quantity">1</span>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="updateCartQuantity(this, 1)">+</button>
+                                </div>
+                                <span class="ms-2 item-price"></span>
+                                <button class="btn btn-sm btn-link text-danger ms-2" onclick="removeFromCart(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                {% endfor %}
+                    </template>
+                </div>
             </div>
         </div>
     </div>
 </section>
-    <!-- Add this modal for store status messages -->
-<div class="modal fade" id="storeStatusModal" tabindex="-1" aria-labelledby="storeStatusModalLabel" aria-hidden="true">
+
+<!-- Store Status Modal -->
+<div class="modal fade" id="storeStatusModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="storeStatusModalLabel">Store Status</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Store Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="storeStatusMessage">
-            </div>
+            <div class="modal-body" id="storeStatusMessage"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
@@ -146,210 +190,696 @@
 
 {% block extra_css %}
 <style>
-    .menu-item-card {
-        width: 100%;
-        transition: transform 0.2s;
-    }
-    .menu-item-card:hover {
-        transform: translateY(-5px);
-    }
-    .menu-item-image {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-    }
-    .price {
-        color: #ce1212;
-        font-weight: bold;
-        font-size: 1.1rem;
-    }
-    .quantity-control {
-        align-items: center;
-    }
-    .quantity-control .btn {
-        padding: 0.25rem 0.5rem;
-    }
-    .category-title {
-        color: #ce1212;
-        font-weight: 700;
+.sticky-lg-top {
+    position: sticky;
+    top: 120px; /* Increased from 100px to 120px to account for navbar height */
+    z-index: 1; /* Lower z-index than navbar */
+}
+
+.menu-section {
+    padding-top: 120px;
+    min-height: calc(100vh - 120px);
+}
+
+.category-sidebar .card,
+.cart-sidebar .card {
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+/* Add this to ensure navbar stays on top */
+#header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030; /* Higher z-index to stay above cart */
+}
+
+/* Add this for cart sidebar to not overlap */
+.cart-sidebar {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+
+
+.menu-item-card {
+    height: 100%;
+    transition: transform 0.2s;
+}
+
+.menu-item-card:hover {
+    transform: translateY(-5px);
+}
+
+.menu-item-image {
+    height: 200px;
+    object-fit: cover;
+}
+
+.cart-item {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+.form-check-input:checked {
+    background-color: #ce1212;
+    border-color: #ce1212;
+}
+
+.list-group-item.active {
+    background-color: #ce1212;
+    border-color: #ce1212;
+}
+
+@media (max-width: 991.98px) {
+    .sticky-lg-top {
+        position: static;
     }
 
-    /* Navbar Fix */
-    header {
-        z-index: 1050;
-        position: fixed;
-        width: 100%;
-        top: 0;
+    .category-sidebar,
+    .cart-sidebar {
+        margin-bottom: 2rem;
     }
+}
 
-    /* Adjust content padding */
-    body {
-        margin-top: 0;
-    }
+
+.list-group-item {
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.list-group-item:hover,
+.list-group-item.active {
+    border-left-color: #ce1212;
+}
+
+.list-group-item.active {
+    background-color: #ce1212;
+    border-color: #ce1212;
+}
+
+.search-bar .form-control:focus {
+    border-color: #ce1212;
+    box-shadow: 0 0 0 0.2rem rgba(206, 18, 18, 0.25);
+}
+
+.spice-filters,
+.dietary-filters {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#cartItems {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+
+#viewCartBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.sort-options select {
+    border-color: #ce1212;
+}
+
+.sort-options select:focus {
+    border-color: #ce1212;
+    box-shadow: 0 0 0 0.2rem rgba(206, 18, 18, 0.25);
+}
+
+
 </style>
 {% endblock %}
 
 {% block extra_js %}
+    {{ block.super }}
 <script>
+console.log('Bootstrap:', typeof bootstrap !== 'undefined' ? 'Loaded' : 'Not loaded');
 
-// Update the checkStoreStatus function to return a Promise
+let cart = {};
+// Main document initialization
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing menu page...');
+
+    // Check Bootstrap availability
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap is not loaded!');
+        return;
+    }
+    console.log('Bootstrap version:', bootstrap.version);
+
+    // Initialize all components
+    initializeModals();
+    loadCart();
+    checkStoreStatus();
+    updateItemCount();
+    initializeFilters();
+    initializeTooltips();
+
+    // Initialize AOS animations if available
+    if (typeof AOS !== 'undefined') {
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            mirror: false
+        });
+    }
+});
+
+// =============== MODAL HANDLING ===============
+function initializeModals() {
+    // Initialize all modals
+    document.querySelectorAll('.modal').forEach(modal => {
+        // Add event listeners for modal show/hide
+        modal.addEventListener('show.bs.modal', function(event) {
+            const itemId = this.id.split('_')[1];
+            initializeModalControls(itemId);
+        });
+
+        modal.addEventListener('hidden.bs.modal', function(event) {
+            const form = this.querySelector('form');
+            if (form) {
+                form.reset();
+                const itemId = this.id.split('_')[1];
+                updateModalTotal(itemId);
+            }
+        });
+    });
+
+    // Add click handlers for Add to Cart buttons
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const itemId = button.dataset.itemId;
+            showCustomizeModal(itemId);
+        });
+    });
+}
+
+function showCustomizeModal(itemId) {
+    const modalId = `customizeModal_${itemId}`;
+    const modal = document.getElementById(modalId);
+
+    if (!modal) {
+        console.error(`Modal not found: ${modalId}`);
+        return;
+    }
+
+    const form = modal.querySelector('form');
+    if (form) {
+        form.reset();
+        // Explicitly set quantity to 1
+        const quantityInput = form.querySelector('.quantity-input');
+        if (quantityInput) {
+            quantityInput.value = '1';
+        }
+        updateModalTotal(itemId);
+    }
+
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+}
+
+function updateQuantity(input, delta) {
+    const currentValue = parseInt(input.value) || 1;
+    const newValue = currentValue + delta;
+    if (newValue >= 1 && newValue <= 10) {
+        input.value = newValue;
+        return true;
+    }
+    return false;
+}
+
+
+function updateModalTotal(itemId) {
+    console.log('Updating total for item:', itemId);
+    const modal = document.getElementById(`customizeModal_${itemId}`);
+    if (!modal) {
+        console.error('Modal not found');
+        return;
+    }
+
+    // Get base price from hidden input
+    const basePriceInput = modal.querySelector('.base-price-input');
+    if (!basePriceInput) {
+        console.error('Base price input not found');
+        return;
+    }
+
+    let total = parseFloat(basePriceInput.value);
+
+    // Get quantity
+    const quantityInput = modal.querySelector('.quantity-input');
+    const quantity = parseInt(quantityInput?.value) || 1;
+
+    // Add choice price adjustments
+    const choiceSelect = modal.querySelector('.choice-select');
+    if (choiceSelect && choiceSelect.value) {
+        const selectedOption = choiceSelect.options[choiceSelect.selectedIndex];
+        const priceAdjust = parseFloat(selectedOption.dataset.priceAdjust || 0);
+        if (!isNaN(priceAdjust)) {
+            total += priceAdjust;
+        }
+    }
+
+    // Add selected add-ons
+    const selectedAddons = modal.querySelectorAll('.addon-checkbox:checked');
+    selectedAddons.forEach(addon => {
+        const addonPrice = parseFloat(addon.dataset.price || 0);
+        if (!isNaN(addonPrice)) {
+            total += addonPrice;
+        }
+    });
+
+    // Multiply by quantity
+    total *= quantity;
+
+    // Update total display
+    const totalPriceDisplay = modal.querySelector('.total-price');
+    if (totalPriceDisplay) {
+        totalPriceDisplay.textContent = total.toFixed(2);
+    }
+
+    console.log('Updated total:', total);
+}
+
+function initializeModalControls(itemId) {
+    const modal = document.getElementById(`customizeModal_${itemId}`);
+    if (!modal) return;
+
+    // Remove existing event listeners first
+    const decreaseBtn = modal.querySelector('.decrease-qty');
+    const increaseBtn = modal.querySelector('.increase-qty');
+    const quantityInput = modal.querySelector('.quantity-input');
+
+    // Clear old event listeners
+    const newDecreaseBtn = decreaseBtn.cloneNode(true);
+    const newIncreaseBtn = increaseBtn.cloneNode(true);
+    decreaseBtn.parentNode.replaceChild(newDecreaseBtn, decreaseBtn);
+    increaseBtn.parentNode.replaceChild(newIncreaseBtn, increaseBtn);
+
+    // Add new event listeners
+    newDecreaseBtn.addEventListener('click', () => {
+        const currentValue = parseInt(quantityInput.value);
+        if (currentValue > 1) {
+            quantityInput.value = currentValue - 1;
+            updateModalTotal(itemId);
+        }
+    });
+
+    newIncreaseBtn.addEventListener('click', () => {
+        const currentValue = parseInt(quantityInput.value);
+        if (currentValue < 10) {
+            quantityInput.value = currentValue + 1;
+            updateModalTotal(itemId);
+        }
+    });
+
+    // Choice select
+    const choiceSelect = modal.querySelector('.choice-select');
+    if (choiceSelect) {
+        choiceSelect.addEventListener('change', () => updateModalTotal(itemId));
+    }
+
+    // Add-on checkboxes
+    const addonCheckboxes = modal.querySelectorAll('.addon-checkbox');
+    addonCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => updateModalTotal(itemId));
+    });
+
+    // Initial total update
+    updateModalTotal(itemId);
+}
+
+// Initialize controls when modal is shown
+document.addEventListener('shown.bs.modal', function(event) {
+    const modal = event.target;
+    const itemId = modal.id.split('_')[1];
+    initializeModalControls(itemId);
+});
+
+// =============== CART MANAGEMENT ===============
+// Cart Functions
+async function loadCart() {
+    try {
+        const response = await fetch('/orders/get-cart/');
+        const cart = await response.json();
+        updateCartDisplay(cart);
+    } catch (error) {
+        console.error('Error loading cart:', error);
+    }
+}
+
+function updateCartDisplay(cart) {
+    const cartItems = document.getElementById('cartItems');
+    const viewCartBtn = document.getElementById('viewCartBtn');
+    let html = '';
+    let total = 0;
+
+    Object.entries(cart).forEach(([key, item]) => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+
+        // Clone and populate template
+        const template = document.getElementById('cartItemTemplate');
+        const clone = template.content.cloneNode(true);
+
+        // Set data and content
+        const cartItem = clone.querySelector('.cart-item');
+        cartItem.dataset.itemKey = key;
+
+        cartItem.querySelector('.item-name').textContent = item.name;
+        cartItem.querySelector('.item-quantity').textContent = item.quantity;
+        cartItem.querySelector('.item-price').textContent = `$${itemTotal.toFixed(2)}`;
+
+        // Add details if choices or add-ons exist
+        let details = [];
+        if (item.choice_name) details.push(item.choice_name);
+        if (item.addon_names && item.addon_names.length > 0) {
+            details.push(item.addon_names.join(', '));
+        }
+        if (details.length > 0) {
+            cartItem.querySelector('.item-details').textContent = details.join(' | ');
+        }
+
+        html += cartItem.outerHTML;
+    });
+
+    cartItems.innerHTML = html;
+    document.getElementById('cartSubtotal').textContent = `$${total.toFixed(2)}`;
+    viewCartBtn.disabled = total === 0;
+
+    // Update cart badge
+    const cartBadge = document.getElementById('cart-count');
+    if (cartBadge) {
+        const itemCount = Object.keys(cart).length;
+        cartBadge.textContent = itemCount;
+        cartBadge.style.display = itemCount > 0 ? 'inline-block' : 'none';
+    }
+}
+
+async function updateCartQuantity(button, delta) {
+    const cartItem = button.closest('.cart-item');
+    const itemKey = cartItem.dataset.itemKey;
+
+    try {
+        // Get current cart
+        const response = await fetch('/orders/get-cart/');
+        let cart = await response.json();
+
+        if (cart[itemKey]) {
+            const newQuantity = cart[itemKey].quantity + delta;
+            if (newQuantity <= 0) {
+                delete cart[itemKey];
+            } else {
+                cart[itemKey].quantity = newQuantity;
+            }
+
+            // Save updated cart
+            await fetch('/orders/save-cart/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(cart)
+            });
+
+            // Update display
+            updateCartDisplay(cart);
+        }
+    } catch (error) {
+        console.error('Error updating cart:', error);
+        showNotification('Error updating cart', 'error');
+    }
+}
+
+async function removeFromCart(button) {
+    const cartItem = button.closest('.cart-item');
+    const itemKey = cartItem.dataset.itemKey;
+
+    try {
+        // Get current cart
+        const response = await fetch('/orders/get-cart/');
+        let cart = await response.json();
+
+        // Remove item
+        if (cart[itemKey]) {
+            delete cart[itemKey];
+
+            // Save updated cart
+            await fetch('/orders/save-cart/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(cart)
+            });
+
+            // Update display
+            updateCartDisplay(cart);
+            showNotification('Item removed from cart');
+        }
+    } catch (error) {
+        console.error('Error removing item:', error);
+        showNotification('Error removing item from cart', 'error');
+    }
+}
+
+
+async function handleCustomization(event, form) {
+    event.preventDefault();
+    console.log('Handling customization submit:', form.id);
+
+    const itemId = form.id.split('_')[1];
+    const formData = new FormData(form);
+
+    // Prepare add-ons array
+    const addons = Array.from(form.querySelectorAll('input[name="addons[]"]:checked'))
+        .map(checkbox => parseInt(checkbox.value));
+
+    const data = {
+        quantity: parseInt(formData.get('quantity')),
+        choice: formData.get('choice') ? parseInt(formData.get('choice')) : null,
+        addons: addons,
+        special_instructions: formData.get('special_instructions')
+    };
+
+    try {
+        const response = await fetch(`/menu/add-to-cart/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            // Close modal properly
+            const modal = form.closest('.modal');
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            modalInstance.hide();
+
+            // Remove modal backdrop manually if it persists
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+
+            // Remove modal-open class from body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            showNotification('Item added to cart');
+            await loadCart();
+        } else {
+            showNotification(result.message || 'Error adding item to cart', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Error adding item to cart', 'error');
+    }
+
+    return false;
+}
+
+
+// =============== FILTERING & SORTING ===============
+let currentCategory = 'all';
+let currentSort = 'name';
+
+function initializeFilters() {
+    // Category filter click handlers
+    document.querySelectorAll('.category-sidebar .list-group-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const categoryId = e.target.dataset.category;
+            filterByCategory(e, categoryId);
+        });
+    });
+
+    // Search input handler
+    const searchInput = document.getElementById('menuSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', filterMenuItems);
+    }
+
+    // Dietary preference handlers
+    ['vegetarian', 'gluten_free'].forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            checkbox.addEventListener('change', filterMenuItems);
+        }
+    });
+}
+
+function filterMenuItems() {
+    const searchTerm = document.getElementById('menuSearch').value.toLowerCase();
+    const isVegetarian = document.getElementById('vegetarian')?.checked || false;
+    const isGlutenFree = document.getElementById('gluten_free')?.checked || false;
+
+    let visibleCount = 0;
+    const items = document.querySelectorAll('.menu-item');
+
+    items.forEach(item => {
+        const matchesCategory = currentCategory === 'all' ||
+                              item.dataset.category === currentCategory;
+        const matchesSearch = item.textContent.toLowerCase().includes(searchTerm);
+        const matchesDietary = (!isVegetarian || item.dataset.vegetarian === 'true') &&
+                              (!isGlutenFree || item.dataset.glutenFree === 'true');
+
+        const isVisible = matchesCategory && matchesSearch && matchesDietary;
+        item.style.display = isVisible ? '' : 'none';
+        if (isVisible) visibleCount++;
+    });
+
+    // Update count and show/hide no results message
+    document.getElementById('itemCount').textContent = visibleCount;
+    document.getElementById('noResults').style.display =
+        visibleCount === 0 ? 'block' : 'none';
+}
+
+function filterByCategory(event, categoryId) {
+    event.preventDefault();
+    currentCategory = categoryId;
+
+    // Update active state
+    document.querySelectorAll('.category-sidebar .list-group-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    filterMenuItems();
+}
+
+function sortMenuItems(sortBy) {
+    currentSort = sortBy;
+    const container = document.getElementById('menuItemsContainer');
+    const items = Array.from(container.children);
+
+    items.sort((a, b) => {
+        if (sortBy === 'name') {
+            return a.querySelector('.card-title').textContent
+                .localeCompare(b.querySelector('.card-title').textContent);
+        } else {
+            const priceA = parseFloat(a.dataset.price);
+            const priceB = parseFloat(b.dataset.price);
+            return sortBy === 'price_asc' ? priceA - priceB : priceB - priceA;
+        }
+    });
+
+    items.forEach(item => container.appendChild(item));
+}
+
+// =============== UTILITY FUNCTIONS ===============
+function updateItemCount() {
+    const visibleItems = document.querySelectorAll('.menu-item:not([style*="display: none"])').length;
+    document.getElementById('itemCount').textContent = visibleItems;
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+    notification.style.cssText = 'z-index: 1050; animation: fadeInOut 3s forwards;';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => notification.remove(), 3000);
+}
+
+function initializeTooltips() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+}
+
+// =============== STORE STATUS CHECK ===============
 async function checkStoreStatus() {
     try {
         const response = await fetch('/orders/check-store-status/');
         const data = await response.json();
 
         if (data.status !== 'open') {
-            const modal = new bootstrap.Modal(document.getElementById('storeStatusModal'));
-            const messageDiv = document.getElementById('statusMessage');
+            const messageDiv = document.getElementById('storeStatusMessage');
+            if (messageDiv) {
+                messageDiv.innerHTML = data.status === 'closed'
+                    ? `<div class="alert alert-danger mb-0">
+                         <i class="bi bi-exclamation-circle-fill me-2"></i>
+                         <strong>Store is currently closed</strong><br>
+                         Our store hours are 12:00 PM to 9:00 PM.
+                       </div>`
+                    : `<div class="alert alert-warning mb-0">
+                         <i class="bi bi-pause-circle-fill me-2"></i>
+                         <strong>Orders Temporarily Paused</strong><br>
+                         Please try again after 30 minutes.
+                       </div>`;
 
-            if (data.status === 'closed') {
-                messageDiv.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-circle-fill me-2"></i>
-                        <strong>Store is currently closed</strong>
-                        <p class="mb-0 mt-2">We're closed for today. Our store hours are from 12:00 PM to 9:00 PM.
-                        Please place your order during store hours.</p>
-                    </div>`;
-            } else if (data.status === 'paused') {
-                messageDiv.innerHTML = `
-                    <div class="alert alert-warning">
-                        <i class="bi bi-pause-circle-fill me-2"></i>
-                        <strong>Orders Temporarily Paused</strong>
-                        <p class="mb-0 mt-2">We're currently experiencing high order volume.
-                        Please try again after 30 minutes.</p>
-                    </div>`;
+                const modal = new bootstrap.Modal(document.getElementById('storeStatusModal'));
+                modal.show();
             }
-            modal.show();
-            return false;
         }
-        return true;
     } catch (error) {
         console.error('Error checking store status:', error);
-        return false;
     }
 }
-
-
-let cart = {};
-
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Load cart from session if exists
-    fetch('{% url "orders:get_cart" %}')
-        .then(response => response.json())
-        .then(data => {
-            cart = data;
-            updateCartDisplay();
-            updateQuantityDisplays();
-        });
-
-    // Smooth scroll for category links
-    document.querySelectorAll('.category-sidebar a').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            document.querySelector(targetId).scrollIntoView({
-                behavior: 'smooth'
-            });
-        });
-    });
-});
-
-async function updateCart(itemId, itemName, price, change) {
-    // Initialize item in cart if not exists
-
-    if (!cart[itemId]) {
-        cart[itemId] = { name: itemName, price: price, quantity: 0 };
-    }
-
-    // Update quantity
-    cart[itemId].quantity = Math.max(0, Math.min(10, cart[itemId].quantity + change));
-
-    // Update quantity display
-    document.getElementById(`quantity-${itemId}`).innerText = cart[itemId].quantity;
-
-    // Remove item from cart if quantity is 0
-    if (cart[itemId].quantity === 0) {
-        delete cart[itemId];
-    }
-
-    updateCartDisplay();
-    saveCartToSession();
-
-    // Show notification for changes
-    if (change > 0) {
-        showNotification(`Added 1 × ${itemName}`);
-    } else if (change < 0) {
-        showNotification(`Removed 1 × ${itemName}`);
-    }
-}
-
-document.querySelector('a[href*="checkout"]')?.addEventListener('click', async function(e) {
-    e.preventDefault();
-    const canProceed = await checkStoreStatus();
-    if (canProceed) {
-        window.location.href = this.href;
-    }
-});
-
-function updateCartDisplay() {
-    const cartItems = document.getElementById('cart-items');
-    const viewCartBtn = document.getElementById('view-cart-btn');
-    let total = 0;
-    let html = '';
-
-    for (let itemId in cart) {
-        const item = cart[itemId];
-        const itemTotal = item.price * item.quantity;
-        total += itemTotal;
-        html += `
-            <div class="cart-item mb-2">
-                <div class="d-flex justify-content-between">
-                    <span>${item.name} × ${item.quantity}</span>
-                    <span>$${itemTotal.toFixed(2)}</span>
-                </div>
-            </div>
-        `;
-    }
-
-    cartItems.innerHTML = html;
-    document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
-    viewCartBtn.disabled = total === 0;
-}
-
-function updateQuantityDisplays() {
-    // Update all quantity displays based on current cart state
-    for (let itemId in cart) {
-        const quantitySpan = document.getElementById(`quantity-${itemId}`);
-        if (quantitySpan) {
-            quantitySpan.innerText = cart[itemId].quantity;
+// Add this function to properly clean up modals
+function cleanupModals() {
+    // Remove any lingering modals and backdrops
+    document.querySelectorAll('.modal').forEach(modal => {
+        if (modal.classList.contains('show')) {
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            if (modalInstance) modalInstance.hide();
         }
-    }
-}
-
-function saveCartToSession() {
-    fetch('{% url "orders:save_cart" %}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}',
-        },
-        body: JSON.stringify(cart)
     });
+
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+        backdrop.remove();
+    });
+
+    // Clean up body classes
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
 }
 
-function showNotification(message) {
-    const notification = document.createElement('div');
-    notification.className = 'alert alert-success position-fixed top-0 end-0 m-3';
-    notification.style.zIndex = '1050';
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
-}
-
-
-
+// Call this after modal operations
+document.addEventListener('hidden.bs.modal', function (event) {
+    cleanupModals();
+});
 </script>
 {% endblock %}
 {% endblock %}

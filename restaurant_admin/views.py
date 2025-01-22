@@ -6,7 +6,10 @@ from django.db.models import Sum, Count, Case, When, Q
 from django.forms import DecimalField, FloatField
 from django.template import loader, RequestContext
 from django.db import models
-from menu.models import MenuItem, Category
+from django.template.defaultfilters import slugify
+
+from menu.forms import ItemChoiceForm, ItemAddonForm, MenuItemForm
+from menu.models import MenuItem, Category, ItemChoice, ItemAddon
 from accounts.models import UserProfile, Transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from orders.models import Order, OrderItem
@@ -197,11 +200,12 @@ def update_order_status(request, order_id):
 
         if new_status == 'ready':
             try:
-                subject = f'Your Order #{order.id} is Ready for Pickup - Royal Nepal'
                 context = {
                     'order': order,
-                    'restaurant_name': 'Royal Nepal Restaurant'
+                    'logo_url': 'https://yoursite.com/static/img/logo.png',  # Update with your logo URL
                 }
+
+                subject = f'Your Order #{order.id} is Ready for Pickup! 🎉'
                 html_message = render_to_string('orders/emails/order_ready.html', context)
                 plain_message = strip_tags(html_message)
 
@@ -215,8 +219,6 @@ def update_order_status(request, order_id):
                 )
             except Exception as e:
                 print(f"Error sending order ready email: {str(e)}")
-
-
 
         badge_class = {
             'pending': 'bg-warning',
@@ -760,13 +762,16 @@ def export_transactions_pdf(request):
 
 ###MENU MANAGEMENT
 
+# Category Management Views
 @user_passes_test(is_staff_or_superuser)
 @require_POST
 def add_category(request):
     try:
         data = json.loads(request.body)
+        data['slug'] = slugify(data['name'])  # Auto-generate slug
         category = Category.objects.create(
             name=data['name'],
+            slug=data['slug'],
             description=data.get('description', ''),
             display_order=data.get('display_order', 0)
         )
@@ -788,9 +793,11 @@ def edit_category(request, category_id):
 
     if request.method == 'GET':
         return JsonResponse({
+            'id': category.id,
             'name': category.name,
             'description': category.description,
-            'display_order': category.display_order
+            'display_order': category.display_order,
+            'is_active': category.is_active
         })
 
     elif request.method == 'POST':
@@ -799,13 +806,19 @@ def edit_category(request, category_id):
             category.name = data['name']
             category.description = data.get('description', '')
             category.display_order = int(data.get('display_order', 0))
-            category.save()
+            category.is_active = data.get('is_active', True)
 
+            # Update slug only if name changed
+            if category.name != data['name']:
+                category.slug = slugify(data['name'])
+
+            category.save()
             return JsonResponse({'status': 'success'})
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
 
 
 @user_passes_test(is_staff_or_superuser)
@@ -816,14 +829,14 @@ def delete_category(request, category_id):
 
         # Check if category has menu items
         if category.items.exists():
-            # Option 1: Prevent deletion
             return JsonResponse({
                 'status': 'error',
-                'message': 'Cannot delete category that contains menu items'
+                'message': 'Cannot delete category that contains menu items. Please delete or move the items first.'
             }, status=400)
 
-            # Option 2: Delete all related items
-            # category.items.all().delete()
+        # # Delete category image if exists
+        # if category.image:
+        #     default_storage.delete(category.image.path)
 
         category.delete()
         return JsonResponse({'status': 'success'})
@@ -831,84 +844,141 @@ def delete_category(request, category_id):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
+# Menu Item Management Views
+@user_passes_test(is_staff_or_superuser)
+def food_menu(request):
+    """Main menu management view"""
+    # Get categories with prefetched items and counts
+    categories = Category.objects.prefetch_related(
+        'items'
+    ).all().order_by('display_order')
+
+    # Get menu items with all related data
+    menu_items = MenuItem.objects.select_related(
+        'category'
+    ).prefetch_related(
+        'available_choices',
+        'available_addons'
+    ).all().order_by('category__display_order', 'name')
+
+    # Get all choices and addons for forms
+    choices = ItemChoice.objects.all().order_by('name')
+    addons = ItemAddon.objects.all().order_by('name')
+
+    context = {
+        'categories': categories,
+        'menu_items': menu_items,
+        'choices': choices,
+        'addons': addons,
+        'spice_levels': MenuItem.SPICE_LEVELS
+    }
+    return render(request, 'restaurant_admin/food_menu.html', context)
+
+
 @user_passes_test(is_staff_or_superuser)
 def get_menu_item(request, item_id):
+    """Get menu item details for editing"""
     try:
         item = get_object_or_404(MenuItem, id=item_id)
         data = {
             'id': item.id,
             'name': item.name,
             'category_id': item.category.id,
-            'price': str(item.price),
             'description': item.description,
-            'spice_level': item.spice_level,
+            'price': str(item.price),
             'is_available': item.is_available,
+            'is_featured': item.is_featured,
+            'is_vegetarian': item.is_vegetarian,
+            'is_vegan': item.is_vegan,
+            'is_gluten_free': item.is_gluten_free,
+            'has_spice_customization': item.has_spice_customization,
+            'spice_level': item.spice_level,
+            'has_choices': item.has_choices,
+            'requires_choice': item.requires_choice,
+            'ingredients': item.ingredients,
+            'allergens': item.allergens,
+            'preparation_time': item.preparation_time,
+            'calories': item.calories,
+            'available_choices': [choice.id for choice in item.available_choices.all()],
+            'available_addons': [addon.id for addon in item.available_addons.all()]
         }
         if item.image:
             data['image_url'] = item.image.url
         return JsonResponse(data)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 @user_passes_test(is_staff_or_superuser)
+@require_POST
 def add_menu_item(request):
-    if request.method == 'POST':
-        try:
-            menu_item = MenuItem.objects.create(
-                name=request.POST['name'],
-                category_id=request.POST['category'],
-                price=request.POST['price'],
-                description=request.POST.get('description', ''),
-                spice_level=request.POST.get('spice_level', 'medium'),
-                is_available=request.POST.get('is_available') == 'on'
-            )
+    """Add a new menu item"""
+    try:
+        form = MenuItemForm(request.POST, request.FILES)
+        if form.is_valid():
+            menu_item = form.save(commit=False)
+            menu_item.slug = slugify(menu_item.name)
+            menu_item.save()
 
-            if 'image' in request.FILES:
-                menu_item.image = request.FILES['image']
-                menu_item.save()
+            # Save many-to-many relationships
+            form.save_m2m()
 
             return JsonResponse({'status': 'success'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 @user_passes_test(is_staff_or_superuser)
+@require_POST
 def edit_menu_item(request, item_id):
-    menu_item = get_object_or_404(MenuItem, id=item_id)
+    """Edit an existing menu item"""
+    try:
+        menu_item = get_object_or_404(MenuItem, id=item_id)
+        form = MenuItemForm(request.POST, request.FILES, instance=menu_item)
 
-    if request.method == 'POST':
-        try:
-            menu_item.name = request.POST['name']
-            menu_item.category_id = request.POST['category']
-            menu_item.price = request.POST['price']
-            menu_item.description = request.POST.get('description', '')
-            menu_item.spice_level = request.POST.get('spice_level', 'medium')
-            menu_item.is_available = request.POST.get('is_available') == 'on'
+        if form.is_valid():
+            # Handle image replacement
+            if request.FILES.get('image') and menu_item.image:
+                default_storage.delete(menu_item.image.path)
 
-            if 'image' in request.FILES:
-                # Delete old image if exists
-                if menu_item.image:
-                    menu_item.image.delete()
-                menu_item.image = request.FILES['image']
-
+            menu_item = form.save(commit=False)
+            # Update slug if name changed
+            if menu_item.name != request.POST.get('name'):
+                menu_item.slug = slugify(menu_item.name)
             menu_item.save()
+
+            # Save many-to-many relationships
+            form.save_m2m()
+
             return JsonResponse({'status': 'success'})
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @user_passes_test(is_staff_or_superuser)
 @require_POST
 def delete_menu_item(request, item_id):
+    """Delete a menu item"""
     try:
         menu_item = get_object_or_404(MenuItem, id=item_id)
+
+        # Delete associated image if exists
         if menu_item.image:
             default_storage.delete(menu_item.image.path)
+
+        # Check for any active orders containing this item
+        if hasattr(menu_item, 'orderitems'):
+            active_orders = menu_item.orderitems.filter(
+                order__status__in=['pending', 'in_progress']
+            ).exists()
+            if active_orders:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Cannot delete item with active orders'
+                }, status=400)
+
         menu_item.delete()
         return JsonResponse({'status': 'success'})
     except Exception as e:
@@ -918,6 +988,7 @@ def delete_menu_item(request, item_id):
 @user_passes_test(is_staff_or_superuser)
 @require_POST
 def toggle_menu_item(request, item_id):
+    """Toggle menu item availability"""
     try:
         menu_item = get_object_or_404(MenuItem, id=item_id)
         menu_item.is_available = not menu_item.is_available
@@ -930,18 +1001,188 @@ def toggle_menu_item(request, item_id):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
+# Choice Management Views
 @user_passes_test(is_staff_or_superuser)
-def food_menu(request):
-    categories = Category.objects.all().order_by('display_order')
-    menu_items = MenuItem.objects.select_related('category').all()
+@require_POST
+def add_choice(request):
+    """Add a new menu item choice"""
+    try:
+        data = json.loads(request.body)
+        form = ItemChoiceForm(data)
+        if form.is_valid():
+            choice = form.save()
+            return JsonResponse({
+                'status': 'success',
+                'choice': {
+                    'id': choice.id,
+                    'name': choice.name,
+                    'price_adjustment': float(choice.price_adjustment)
+                }
+            })
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-    context = {
-        'categories': categories,
-        'menu_items': menu_items,
-    }
-    return render(request, 'restaurant_admin/food_menu.html', context)
+
+@user_passes_test(is_staff_or_superuser)
+def edit_choice(request, choice_id):
+    """Edit a menu item choice"""
+    try:
+        choice = get_object_or_404(ItemChoice, id=choice_id)
+        if request.method == 'GET':
+            return JsonResponse({
+                'id': choice.id,
+                'name': choice.name,
+                'description': choice.description,
+                'price_adjustment': float(choice.price_adjustment),
+                'is_available': choice.is_available
+            })
+        elif request.method == 'POST':
+            data = json.loads(request.body)
+            form = ItemChoiceForm(data, instance=choice)
+            if form.is_valid():
+                form.save()
+                return JsonResponse({'status': 'success'})
+            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@user_passes_test(is_staff_or_superuser)
+def get_choice(request, choice_id):
+    """Get details for a specific menu item choice"""
+    try:
+        choice = get_object_or_404(ItemChoice, id=choice_id)
+        return JsonResponse({
+            'id': choice.id,
+            'name': choice.name,
+            'description': choice.description,
+            'price_adjustment': float(choice.price_adjustment),
+            'is_available': choice.is_available,
+            'created_at': choice.created_at.isoformat(),
+            'updated_at': choice.updated_at.isoformat()
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
+@user_passes_test(is_staff_or_superuser)
+@require_POST
+def delete_choice(request, choice_id):
+    """Delete a menu item choice"""
+    try:
+        choice = get_object_or_404(ItemChoice, id=choice_id)
+
+        # Check if the choice is being used by any menu items
+        menu_items_using_choice = MenuItem.objects.filter(available_choices=choice)
+        if menu_items_using_choice.exists():
+            menu_items = ", ".join([item.name for item in menu_items_using_choice])
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Cannot delete choice as it is being used by the following menu items: {menu_items}'
+            }, status=400)
+
+        choice.delete()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
 
 
+# Add-on Management Views
+@user_passes_test(is_staff_or_superuser)
+@require_POST
+def add_addon(request):
+    """Add a new menu item add-on"""
+    try:
+        data = json.loads(request.body)
+        form = ItemAddonForm(data)
+        if form.is_valid():
+            addon = form.save()
+            return JsonResponse({
+                'status': 'success',
+                'addon': {
+                    'id': addon.id,
+                    'name': addon.name,
+                    'price': float(addon.price)
+                }
+            })
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+@user_passes_test(is_staff_or_superuser)
+def edit_addon(request, addon_id):
+    """Edit a menu item add-on"""
+    try:
+        addon = get_object_or_404(ItemAddon, id=addon_id)
+        if request.method == 'GET':
+            return JsonResponse({
+                'id': addon.id,
+                'name': addon.name,
+                'description': addon.description,
+                'price': float(addon.price),
+                'is_available': addon.is_available
+            })
+        elif request.method == 'POST':
+            data = json.loads(request.body)
+            form = ItemAddonForm(data, instance=addon)
+            if form.is_valid():
+                form.save()
+                return JsonResponse({'status': 'success'})
+            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+@user_passes_test(is_staff_or_superuser)
+def get_addon(request, addon_id):
+    """Get details for a specific menu item add-on"""
+    try:
+        addon = get_object_or_404(ItemAddon, id=addon_id)
+        return JsonResponse({
+            'id': addon.id,
+            'name': addon.name,
+            'description': addon.description,
+            'price': float(addon.price),
+            'is_available': addon.is_available,
+            'created_at': addon.created_at.isoformat(),
+            'updated_at': addon.updated_at.isoformat()
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
+
+@user_passes_test(is_staff_or_superuser)
+@require_POST
+def delete_addon(request, addon_id):
+    """Delete a menu item add-on"""
+    try:
+        addon = get_object_or_404(ItemAddon, id=addon_id)
+
+        # Check if the add-on is being used by any menu items
+        menu_items_using_addon = MenuItem.objects.filter(available_addons=addon)
+        if menu_items_using_addon.exists():
+            menu_items = ", ".join([item.name for item in menu_items_using_addon])
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Cannot delete add-on as it is being used by the following menu items: {menu_items}'
+            }, status=400)
+
+        addon.delete()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
 
 
 ###MANAGE CUSTOMERS

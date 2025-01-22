@@ -10,7 +10,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
     path('menu/', include('menu.urls')),
-    path('order/', include('orders.urls')),
+    path('orders/', include('orders.urls')),
     path('reservations/', include('reservations.urls')),
     path('giftcards/', include('giftcards.urls')),
     path('accounts/', include('accounts.urls')),  # Add this line
