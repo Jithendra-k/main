@@ -62,67 +62,67 @@
             </div>
         </div>
 
-        <!-- Event Showcase Slider -->
-        <div class="event-showcase">
-            <h3 class="text-center mb-4">Our Event Spaces</h3>
-            <div class="swiper init-swiper">
-                <script type="application/json" class="swiper-config">
-                {
-                    "loop": true,
-                    "speed": 600,
-                    "autoplay": {
-                        "delay": 5000
-                    },
-                    "slidesPerView": "auto",
-                    "pagination": {
-                        "el": ".swiper-pagination",
-                        "type": "bullets",
-                        "clickable": true
-                    },
-                    "breakpoints": {
-                        "320": {
-                            "slidesPerView": 1,
-                            "spaceBetween": 40
-                        },
-                        "1200": {
-                            "slidesPerView": 3,
-                            "spaceBetween": 1
-                        }
-                    }
-                }
-                </script>
-                <div class="swiper-wrapper">
-                    <div class="swiper-slide event-item d-flex flex-column justify-content-end"
-                         style="background-image: url({% static 'img/events-1.jpg' %})">
-                        <h3>Custom Parties</h3>
-                        <div class="price align-self-start">Starting at $99</div>
-                        <p class="description">Perfect for intimate gatherings and celebrations.</p>
-                    </div>
-
-                    <div class="swiper-slide event-item d-flex flex-column justify-content-end"
-                         style="background-image: url({% static 'img/events-2.jpg' %})">
-                        <h3>Private Parties</h3>
-                        <div class="price align-self-start">Starting at $289</div>
-                        <p class="description">Exclusive space for your special occasions.</p>
-                    </div>
-
-                    <div class="swiper-slide event-item d-flex flex-column justify-content-end"
-                         style="background-image: url({% static 'img/events-3.jpg' %})">
-                        <h3>Birthday Parties</h3>
-                        <div class="price align-self-start">Starting at $499</div>
-                        <p class="description">Make your birthday celebration unforgettable.</p>
-                    </div>
-
-                    <div class="swiper-slide event-item d-flex flex-column justify-content-end"
-                         style="background-image: url({% static 'img/events-4.jpg' %})">
-                        <h3>Wedding Parties</h3>
-                        <div class="price align-self-start">Starting at $899</div>
-                        <p class="description">Create magical moments on your special day.</p>
-                    </div>
-                </div>
-                <div class="swiper-pagination"></div>
-            </div>
-        </div>
+{#        <!-- Event Showcase Slider -->#}
+{#        <div class="event-showcase">#}
+{#            <h3 class="text-center mb-4">Our Event Spaces</h3>#}
+{#            <div class="swiper init-swiper">#}
+{#                <script type="application/json" class="swiper-config">#}
+{#                {#}
+{#                    "loop": true,#}
+{#                    "speed": 600,#}
+{#                    "autoplay": {#}
+{#                        "delay": 5000#}
+{#                    },#}
+{#                    "slidesPerView": "auto",#}
+{#                    "pagination": {#}
+{#                        "el": ".swiper-pagination",#}
+{#                        "type": "bullets",#}
+{#                        "clickable": true#}
+{#                    },#}
+{#                    "breakpoints": {#}
+{#                        "320": {#}
+{#                            "slidesPerView": 1,#}
+{#                            "spaceBetween": 40#}
+{#                        },#}
+{#                        "1200": {#}
+{#                            "slidesPerView": 3,#}
+{#                            "spaceBetween": 1#}
+{#                        }#}
+{#                    }#}
+{#                }#}
+{#                </script>#}
+{#                <div class="swiper-wrapper">#}
+{#                    <div class="swiper-slide event-item d-flex flex-column justify-content-end"#}
+{#                         style="background-image: url({% static 'img/events-1.jpg' %})">#}
+{#                        <h3>Custom Parties</h3>#}
+{#                        <div class="price align-self-start">Starting at $99</div>#}
+{#                        <p class="description">Perfect for intimate gatherings and celebrations.</p>#}
+{#                    </div>#}
+{##}
+{#                    <div class="swiper-slide event-item d-flex flex-column justify-content-end"#}
+{#                         style="background-image: url({% static 'img/events-2.jpg' %})">#}
+{#                        <h3>Private Parties</h3>#}
+{#                        <div class="price align-self-start">Starting at $289</div>#}
+{#                        <p class="description">Exclusive space for your special occasions.</p>#}
+{#                    </div>#}
+{##}
+{#                    <div class="swiper-slide event-item d-flex flex-column justify-content-end"#}
+{#                         style="background-image: url({% static 'img/events-3.jpg' %})">#}
+{#                        <h3>Birthday Parties</h3>#}
+{#                        <div class="price align-self-start">Starting at $499</div>#}
+{#                        <p class="description">Make your birthday celebration unforgettable.</p>#}
+{#                    </div>#}
+{##}
+{#                    <div class="swiper-slide event-item d-flex flex-column justify-content-end"#}
+{#                         style="background-image: url({% static 'img/events-4.jpg' %})">#}
+{#                        <h3>Wedding Parties</h3>#}
+{#                        <div class="price align-self-start">Starting at $899</div>#}
+{#                        <p class="description">Create magical moments on your special day.</p>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div class="swiper-pagination"></div>#}
+{#            </div>#}
+{#        </div>#}
     </div>
 </section>
 
@@ -134,6 +134,24 @@
     background-size: cover;
 }
 
+/* Add these styles to change blue to red */
+.text-primary {
+    color: #ce1212 !important;
+}
+
+.btn-primary {
+    background-color: #ce1212 !important;
+    border-color: #ce1212 !important;
+    color: white !important;
+}
+
+.btn-primary:hover {
+    background-color: #b01010 !important;
+    border-color: #b01010 !important;
+    transform: translateY(-2px);
+}
+
+/* Rest of your existing styles */
 .option-content {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 15px;
@@ -207,110 +225,107 @@
 {#    {% include 'core/sections/about.html' %}#}
 
 <!-- About Section -->
-    <section id="about" class="about section">
+<section id="about" class="about section">
 
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>About Us<br></h2>
-        <p><span>Learn More</span> <span class="description-title">About Us</span></p>
-      </div><!-- End Section Title -->
+  <!-- Section Title -->
+  <div class="container section-title" data-aos="fade-up">
+    <h2>About Royal Nepal<br></h2>
+    <p><span>Discover</span> <span class="description-title">Our Story</span></p>
+  </div><!-- End Section Title -->
 
-      <div class="container">
+  <div class="container">
 
-        <div class="row gy-4">
-          <div class="col-lg-7" data-aos="fade-up" data-aos-delay="100">
-            <img src="{% static 'img/about.jpg' %}" class="img-fluid mb-4" alt="">
-            <div class="book-a-table">
-              <h3>Book a Table</h3>
-              <p>+1 5589 55488 55</p>
-            </div>
-          </div>
-          <div class="col-lg-5" data-aos="fade-up" data-aos-delay="250">
-            <div class="content ps-0 ps-lg-5">
-              <p class="fst-italic">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-                magna aliqua.
-              </p>
-              <ul>
-                <li><i class="bi bi-check-circle-fill"></i> <span>Ullamco laboris nisi ut aliquip ex ea commodo consequat.</span></li>
-                <li><i class="bi bi-check-circle-fill"></i> <span>Duis aute irure dolor in reprehenderit in voluptate velit.</span></li>
-                <li><i class="bi bi-check-circle-fill"></i> <span>Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate trideta storacalaperda mastiro dolore eu fugiat nulla pariatur.</span></li>
-              </ul>
-              <p>
-                Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-                velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident
-              </p>
+    <div class="row gy-4">
+      <div class="col-lg-7" data-aos="fade-up" data-aos-delay="100">
+        <img src="{% static 'img/about/about.jpg' %}" class="img-fluid mb-4" alt="Royal Nepal Restaurant interior">
+        <p>
+            As the third branch of our successful restaurant chain, Royal Nepal Texas continues our tradition of excellence. Our menu features Himalayan specialties like tender goat curry, perfectly spiced biryani, and our award-winning momos. Every dish tells a story of Nepal's rich cultural tapestry, bringing the authentic tastes of the Himalayas to Texas.
+          </p>
+          <div class="book-a-table">
+          <h3>Royal Nepal Restaurant</h3>
+          <p><a href="https://royalnepal-va.github.io/royalnepalva/">Explore our culinary journey</a></p>
+        </div>
+      </div>
+      <div class="col-lg-5" data-aos="fade-up" data-aos-delay="250">
+        <div class="content ps-0 ps-lg-5">
+          <p class="fst-italic">
+            Welcome to Royal Nepal Restaurant Texas, where we bring authentic Nepalese flavors and traditions to your table since 2017.
+          </p>
+          <ul>
+            <li><i class="bi bi-check-circle-fill"></i> <span>Authentic Nepalese cuisine prepared by chefs from the Himalayan region</span></li>
+            <li><i class="bi bi-check-circle-fill"></i> <span>Famous for our signature momos (dumplings) with house-made achaar</span></li>
+            <li><i class="bi bi-check-circle-fill"></i> <span>Traditional cooking methods using hand-ground spices and locally sourced ingredients to create distinctive flavors that reflect Nepal's diverse culinary heritage</span></li>
+          </ul>
 
-              <div class="position-relative mt-4">
-                <img src="{% static 'img/about-2.jpg' %}" class="img-fluid" alt="">
-                <a href="https://www.youtube.com/watch?v=Y7f98aduVJ8" class="glightbox pulsating-play-btn"></a>
-              </div>
-            </div>
+          <div class="position-relative mt-4">
+            <img src="{% static 'img/about/about-yt.JPG' %}" class="img-fluid" alt="Royal Nepal signature dishes">
+            <a href="https://youtu.be/n9QqgoQHLx4?si=jZku95V1EB6YhH6L" class="glightbox pulsating-play-btn"></a>
           </div>
         </div>
-
       </div>
+    </div>
 
-    </section><!-- /About Section -->
+  </div>
+
+</section><!-- /About Section -->
 
     <!-- Why Us Section -->
 {#    {% include 'core/sections/why_us.html' %}#}
 
 <!-- Why Us Section -->
-    <section id="why-us" class="why-us section light-background">
+<section id="why-us" class="why-us section light-background">
 
-      <div class="container">
+  <div class="container">
 
-        <div class="row gy-4">
+    <div class="row gy-4">
 
-          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
-            <div class="why-box">
-              <h3>Why Choose Yummy</h3>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Duis aute irure dolor in reprehenderit
-                Asperiores dolores sed et. Tenetur quia eos. Autem tempore quibusdam vel necessitatibus optio ad corporis.
-              </p>
-              <div class="text-center">
-                <a href="#" class="more-btn"><span>Learn More</span> <i class="bi bi-chevron-right"></i></a>
-              </div>
-            </div>
-          </div><!-- End Why Box -->
-
-          <div class="col-lg-8 d-flex align-items-stretch">
-            <div class="row gy-4" data-aos="fade-up" data-aos-delay="200">
-
-              <div class="col-xl-4">
-                <div class="icon-box d-flex flex-column justify-content-center align-items-center">
-                  <i class="bi bi-clipboard-data"></i>
-                  <h4>Corporis voluptates officia eiusmod</h4>
-                  <p>Consequuntur sunt aut quasi enim aliquam quae harum pariatur laboris nisi ut aliquip</p>
-                </div>
-              </div><!-- End Icon Box -->
-
-              <div class="col-xl-4" data-aos="fade-up" data-aos-delay="300">
-                <div class="icon-box d-flex flex-column justify-content-center align-items-center">
-                  <i class="bi bi-gem"></i>
-                  <h4>Ullamco laboris ladore lore pan</h4>
-                  <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt</p>
-                </div>
-              </div><!-- End Icon Box -->
-
-              <div class="col-xl-4" data-aos="fade-up" data-aos-delay="400">
-                <div class="icon-box d-flex flex-column justify-content-center align-items-center">
-                  <i class="bi bi-inboxes"></i>
-                  <h4>Labore consequatur incidid dolore</h4>
-                  <p>Aut suscipit aut cum nemo deleniti aut omnis. Doloribus ut maiores omnis facere</p>
-                </div>
-              </div><!-- End Icon Box -->
-
-            </div>
+      <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="why-box">
+          <h3>Why Choose Royal Nepal</h3>
+          <p>
+            Since 2017, Royal Nepal Restaurant Texas has been delivering authentic Nepalese flavors crafted by skilled chefs directly from Nepal. As our third successful branch, we bring 8 years of culinary expertise to your table, ensuring each dish reflects the rich traditions and vibrant flavors of Himalayan cuisine.
+          </p>
+          <div class="text-center">
+            <a href="{% url 'menu:menu_list' %}" class="more-btn"><span>Discover Our Menu</span> <i class="bi bi-chevron-right"></i></a>
           </div>
+        </div>
+      </div><!-- End Why Box -->
+
+      <div class="col-lg-8 d-flex align-items-stretch">
+        <div class="row gy-4" data-aos="fade-up" data-aos-delay="200">
+
+          <div class="col-xl-4">
+            <div class="icon-box d-flex flex-column justify-content-center align-items-center">
+              <i class="bi bi-award"></i>
+              <h4>Authentic Nepalese Chefs</h4>
+              <p>Our culinary team consists of master chefs from Nepal who bring generations of cooking traditions and authentic techniques to every dish</p>
+            </div>
+          </div><!-- End Icon Box -->
+
+          <div class="col-xl-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="icon-box d-flex flex-column justify-content-center align-items-center">
+              <i class="bi bi-cup-hot"></i>
+              <h4>Traditional Masala Chai</h4>
+              <p>Experience our selection of authentic masala chai teas, each blend crafted with hand-ground spices imported directly from Nepal</p>
+            </div>
+          </div><!-- End Icon Box -->
+
+          <div class="col-xl-4" data-aos="fade-up" data-aos-delay="400">
+            <div class="icon-box d-flex flex-column justify-content-center align-items-center">
+              <i class="bi bi-star"></i>
+              <h4>Signature Momos & Curries</h4>
+              <p>Savor our famous momos (dumplings) and wide variety of curries, each perfected over 8 years of culinary excellence</p>
+            </div>
+          </div><!-- End Icon Box -->
 
         </div>
-
       </div>
 
-    </section><!-- /Why Us Section -->
+    </div>
+
+  </div>
+
+</section><!-- /Why Us Section -->
 
 
 
@@ -318,265 +333,242 @@
 {#    {% include 'core/sections/stats.html' %}#}
 
 <!-- Stats Section -->
-    <section id="stats" class="stats section dark-background">
+<section id="stats" class="stats section dark-background">
 
-      <img src="{% static 'img/stats-bg.jpg' %}" alt="" data-aos="fade-in">
+  <img src="{% static 'img/stats-bg.jpg' %}" alt="Royal Nepal dining experience" data-aos="fade-in">
 
-      <div class="container position-relative" data-aos="fade-up" data-aos-delay="100">
+  <div class="container position-relative" data-aos="fade-up" data-aos-delay="100">
 
-        <div class="row gy-4">
+    <div class="row gy-4">
 
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="232" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Clients</p>
-            </div>
-          </div><!-- End Stats Item -->
-
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="521" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Projects</p>
-            </div>
-          </div><!-- End Stats Item -->
-
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="1453" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Hours Of Support</p>
-            </div>
-          </div><!-- End Stats Item -->
-
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="32" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Workers</p>
-            </div>
-          </div><!-- End Stats Item -->
-
+      <div class="col-lg-3 col-md-6">
+        <div class="stats-item text-center w-100 h-100">
+          <span data-purecounter-start="0" data-purecounter-end="8" data-purecounter-duration="1" class="purecounter"></span>
+          <p>Years of Excellence</p>
         </div>
+      </div><!-- End Stats Item -->
 
-      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stats-item text-center w-100 h-100">
+          <span data-purecounter-start="0" data-purecounter-end="7" data-purecounter-duration="1" class="purecounter"></span>
+          <p>Days Open Weekly</p>
+        </div>
+      </div><!-- End Stats Item -->
 
-    </section><!-- /Stats Section -->
+      <div class="col-lg-3 col-md-6">
+        <div class="stats-item text-center w-100 h-100">
+          <span data-purecounter-start="0" data-purecounter-end="50" data-purecounter-duration="1" class="purecounter"></span>
+          <p>Authentic Dishes</p>
+        </div>
+      </div><!-- End Stats Item -->
+
+      <div class="col-lg-3 col-md-6">
+        <div class="stats-item text-center w-100 h-100">
+          <span data-purecounter-start="0" data-purecounter-end="25" data-purecounter-duration="1" class="purecounter"></span>
+          <p>Drink Options</p>
+        </div>
+      </div><!-- End Stats Item -->
+
+    </div>
+
+  </div>
+
+</section><!-- /Stats Section -->
 
 
     <!-- Chefs Section -->
 {#    {% include 'core/sections/chefs.html' %}#}
 
 <!-- Chefs Section -->
-    <section id="chefs" class="chefs section">
+<section id="chefs" class="chefs section">
 
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>chefs</h2>
-        <p><span>Our</span> <span class="description-title">Proffesional Chefs<br></span></p>
-      </div><!-- End Section Title -->
+  <!-- Section Title -->
+  <div class="container section-title" data-aos="fade-up">
+    <h2>Chefs</h2>
+    <p><span>Our</span> <span class="description-title">Master Chefs<br></span></p>
+  </div><!-- End Section Title -->
 
-      <div class="container">
+  <div class="container">
 
-        <div class="row gy-4">
+    <div class="row gy-4 justify-content-center">
 
-          <div class="col-lg-4 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100">
-            <div class="team-member">
-              <div class="member-img">
-                <img src="{% static 'img/chefs/chefs-1.jpg' %}" class="img-fluid" alt="">
-                <div class="social">
-                  <a href=""><i class="bi bi-twitter-x"></i></a>
-                  <a href=""><i class="bi bi-facebook"></i></a>
-                  <a href=""><i class="bi bi-instagram"></i></a>
-                  <a href=""><i class="bi bi-linkedin"></i></a>
-                </div>
-              </div>
-              <div class="member-info">
-                <h4>Walter White</h4>
-                <span>Master Chef</span>
-                <p>Velit aut quia fugit et et. Dolorum ea voluptate vel tempore tenetur ipsa quae aut. Ipsum exercitationem iure minima enim corporis et voluptate.</p>
-              </div>
+      <div class="col-lg-5 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100">
+        <div class="team-member">
+          <div class="member-img">
+            <img src="{% static 'img/chefs/chefs-1.jpg' %}" class="img-fluid" alt="Chef Subhash Rai">
+            <div class="social">
+              <a href=""><i class="bi bi-facebook"></i></a>
+              <a href=""><i class="bi bi-instagram"></i></a>
+              <a href=""><i class="bi bi-linkedin"></i></a>
             </div>
-          </div><!-- End Chef Team Member -->
-
-          <div class="col-lg-4 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="200">
-            <div class="team-member">
-              <div class="member-img">
-                <img src="{% static 'img/chefs/chefs-2.jpg' %}" class="img-fluid" alt="">
-                <div class="social">
-                  <a href=""><i class="bi bi-twitter-x"></i></a>
-                  <a href=""><i class="bi bi-facebook"></i></a>
-                  <a href=""><i class="bi bi-instagram"></i></a>
-                  <a href=""><i class="bi bi-linkedin"></i></a>
-                </div>
-              </div>
-              <div class="member-info">
-                <h4>Sarah Jhonson</h4>
-                <span>Patissier</span>
-                <p>Quo esse repellendus quia id. Est eum et accusantium pariatur fugit nihil minima suscipit corporis. Voluptate sed quas reiciendis animi neque sapiente.</p>
-              </div>
-            </div>
-          </div><!-- End Chef Team Member -->
-
-          <div class="col-lg-4 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="300">
-            <div class="team-member">
-              <div class="member-img">
-                <img src="{% static 'img/chefs/chefs-3.jpg' %}" class="img-fluid" alt="">
-                <div class="social">
-                  <a href=""><i class="bi bi-twitter-x"></i></a>
-                  <a href=""><i class="bi bi-facebook"></i></a>
-                  <a href=""><i class="bi bi-instagram"></i></a>
-                  <a href=""><i class="bi bi-linkedin"></i></a>
-                </div>
-              </div>
-              <div class="member-info">
-                <h4>William Anderson</h4>
-                <span>Cook</span>
-                <p>Vero omnis enim consequatur. Voluptas consectetur unde qui molestiae deserunt. Voluptates enim aut architecto porro aspernatur molestiae modi.</p>
-              </div>
-            </div>
-          </div><!-- End Chef Team Member -->
-
+          </div>
+          <div class="member-info">
+            <h4>Subhash Rai</h4>
+            <span>Executive Chef & Owner</span>
+            <p>With over 20 years of culinary expertise, Chef Subhash brings authentic Nepalese flavors to Texas. A culinary graduate with formal training, his dishes have been featured multiple times in the Washington Post. His dedication to preserving traditional Himalayan cooking techniques while incorporating local ingredients has earned Royal Nepal its distinguished reputation.</p>
+          </div>
         </div>
+      </div><!-- End Chef Team Member -->
 
-      </div>
+      <div class="col-lg-5 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="200">
+        <div class="team-member">
+          <div class="member-img">
+            <img src="{% static 'img/chefs/chefs-2.jpg' %}" class="img-fluid" alt="Join Our Team">
+            <div class="social">
+              <a href=""><i class="bi bi-facebook"></i></a>
+              <a href=""><i class="bi bi-instagram"></i></a>
+              <a href=""><i class="bi bi-linkedin"></i></a>
+            </div>
+          </div>
+          <div class="member-info">
+            <h4>Join Our Team</h4>
+            <span>Sous Chef Position</span>
+            <p>We're seeking a talented Sous Chef with passion for Himalayan cuisine to join our award-winning kitchen. The ideal candidate will have experience with South Asian flavors, dedication to authenticity, and the creativity to help develop seasonal specialties while maintaining our traditional recipes that our guests have come to love.</p>
+          </div>
+        </div>
+      </div><!-- End Chef Team Member -->
 
-    </section><!-- /Chefs Section -->
+    </div>
 
+  </div>
+
+</section><!-- /Chefs Section -->
 
     <!-- Testimonials Section -->
 {#    {% include 'core/sections/testimonials.html' %}#}
 
 <!-- Testimonials Section -->
-    <section id="testimonials" class="testimonials section light-background">
+<section id="testimonials" class="testimonials section light-background">
 
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>TESTIMONIALS</h2>
-        <p>What Are They <span class="description-title">Saying About Us</span></p>
-      </div><!-- End Section Title -->
+  <!-- Section Title -->
+  <div class="container section-title" data-aos="fade-up">
+    <h2>TESTIMONIALS</h2>
+    <p>What Are They <span class="description-title">Saying About Us</span></p>
+  </div><!-- End Section Title -->
 
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
+  <div class="container" data-aos="fade-up" data-aos-delay="100">
 
-        <div class="swiper init-swiper">
-          <script type="application/json" class="swiper-config">
-            {
-              "loop": true,
-              "speed": 600,
-              "autoplay": {
-                "delay": 5000
-              },
-              "slidesPerView": "auto",
-              "pagination": {
-                "el": ".swiper-pagination",
-                "type": "bullets",
-                "clickable": true
-              }
-            }
-          </script>
-          <div class="swiper-wrapper">
+    <div class="swiper init-swiper">
+      <script type="application/json" class="swiper-config">
+        {
+          "loop": true,
+          "speed": 600,
+          "autoplay": {
+            "delay": 5000
+          },
+          "slidesPerView": "auto",
+          "pagination": {
+            "el": ".swiper-pagination",
+            "type": "bullets",
+            "clickable": true
+          }
+        }
+      </script>
+      <div class="swiper-wrapper">
 
-            <div class="swiper-slide">
-              <div class="testimonial-item">
-                <div class="row gy-4 justify-content-center">
-                  <div class="col-lg-6">
-                    <div class="testimonial-content">
-                      <p>
-                        <i class="bi bi-quote quote-icon-left"></i>
-                        <span>Proin iaculis purus consequat sem cure digni ssim donec porttitora entum suscipit rhoncus. Accusantium quam, ultricies eget id, aliquam eget nibh et. Maecen aliquam, risus at semper.</span>
-                        <i class="bi bi-quote quote-icon-right"></i>
-                      </p>
-                      <h3>Saul Goodman</h3>
-                      <h4>Ceo &amp; Founder</h4>
-                      <div class="stars">
-                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-lg-2 text-center">
-                    <img src="{% static 'img/testimonials/testimonials-1.jpg' %}" class="img-fluid testimonial-img" alt="">
+        <div class="swiper-slide">
+          <div class="testimonial-item">
+            <div class="row gy-4 justify-content-center">
+              <div class="col-lg-6">
+                <div class="testimonial-content">
+                  <p>
+                    <i class="bi bi-quote quote-icon-left"></i>
+                    <span>The moment you walk in, you feel like you've entered a portal into a restaurant in Nepal with the traditional decor and the aroma of the spices coming from the kitchen. The yak was so tender, and one of the workers told us how they source their yak meat from grass fed yaks from Colorado. If you're looking for a different style of curry and dumplings, I highly recommend stopping by Royal Nepal - your taste buds will be bursting with excitement!</span>
+                    <i class="bi bi-quote quote-icon-right"></i>
+                  </p>
+                  <h3>Chelsea A.</h3>
+                  <h4>Actress and Entrepreneur</h4>
+                  <div class="stars">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
                   </div>
                 </div>
               </div>
-            </div><!-- End testimonial item -->
-
-            <div class="swiper-slide">
-              <div class="testimonial-item">
-                <div class="row gy-4 justify-content-center">
-                  <div class="col-lg-6">
-                    <div class="testimonial-content">
-                      <p>
-                        <i class="bi bi-quote quote-icon-left"></i>
-                        <span>Export tempor illum tamen malis malis eram quae irure esse labore quem cillum quid cillum eram malis quorum velit fore eram velit sunt aliqua noster fugiat irure amet legam anim culpa.</span>
-                        <i class="bi bi-quote quote-icon-right"></i>
-                      </p>
-                      <h3>Sara Wilsson</h3>
-                      <h4>Designer</h4>
-                      <div class="stars">
-                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-lg-2 text-center">
-                    <img src="{% static 'img/testimonials/testimonials-2.jpg' %}" class="img-fluid testimonial-img" alt="">
-                  </div>
-                </div>
+              <div class="col-lg-2 text-center">
+                <img src="{% static 'img/testimonials/testimonials-1.jpg' %}" class="img-fluid testimonial-img" alt="Chelsea A. Testimonial">
               </div>
-            </div><!-- End testimonial item -->
-
-            <div class="swiper-slide">
-              <div class="testimonial-item">
-                <div class="row gy-4 justify-content-center">
-                  <div class="col-lg-6">
-                    <div class="testimonial-content">
-                      <p>
-                        <i class="bi bi-quote quote-icon-left"></i>
-                        <span>Enim nisi quem export duis labore cillum quae magna enim sint quorum nulla quem veniam duis minim tempor labore quem eram duis noster aute amet eram fore quis sint minim.</span>
-                        <i class="bi bi-quote quote-icon-right"></i>
-                      </p>
-                      <h3>Jena Karlis</h3>
-                      <h4>Store Owner</h4>
-                      <div class="stars">
-                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-lg-2 text-center">
-                    <img src="{% static 'img/testimonials/testimonials-3.jpg' %}" class="img-fluid testimonial-img" alt="">
-                  </div>
-                </div>
-              </div>
-            </div><!-- End testimonial item -->
-
-            <div class="swiper-slide">
-              <div class="testimonial-item">
-                <div class="row gy-4 justify-content-center">
-                  <div class="col-lg-6">
-                    <div class="testimonial-content">
-                      <p>
-                        <i class="bi bi-quote quote-icon-left"></i>
-                        <span>Fugiat enim eram quae cillum dolore dolor amet nulla culpa multos export minim fugiat minim velit minim dolor enim duis veniam ipsum anim magna sunt elit fore quem dolore labore illum veniam.</span>
-                        <i class="bi bi-quote quote-icon-right"></i>
-                      </p>
-                      <h3>John Larson</h3>
-                      <h4>Entrepreneur</h4>
-                      <div class="stars">
-                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-lg-2 text-center">
-                    <img src="{% static 'img/testimonials/testimonials-4.jpg' %}" class="img-fluid testimonial-img" alt="">
-                  </div>
-                </div>
-              </div>
-            </div><!-- End testimonial item -->
-
+            </div>
           </div>
-          <div class="swiper-pagination"></div>
-        </div>
+        </div><!-- End testimonial item -->
+
+        <div class="swiper-slide">
+          <div class="testimonial-item">
+            <div class="row gy-4 justify-content-center">
+              <div class="col-lg-6">
+                <div class="testimonial-content">
+                  <p>
+                    <i class="bi bi-quote quote-icon-left"></i>
+                    <span>Our party of 5 had a fantastic dinner at Royal Nepal. The yak curry was so tender and flavorful. I've never had yak before so this was a great experience. The ROYAL NEPAL MOMO PLATTER with buffalo, yak, wild boar and lamb was perfect! I am so glad we chose Royal Nepal for dinner. Everyone was happy and had a fantastic time.</span>
+                    <i class="bi bi-quote quote-icon-right"></i>
+                  </p>
+                  <h3>Korean Husband Hong Kong Wife</h3>
+                  <h4>Food Vlogger & Influencer</h4>
+                  <div class="stars">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-2 text-center">
+                <img src="{% static 'img/testimonials/testimonials-2.jpg' %}" class="img-fluid testimonial-img" alt="Korean Husband Hong Kong Wife Testimonial">
+              </div>
+            </div>
+          </div>
+        </div><!-- End testimonial item -->
+
+        <div class="swiper-slide">
+          <div class="testimonial-item">
+            <div class="row gy-4 justify-content-center">
+              <div class="col-lg-6">
+                <div class="testimonial-content">
+                  <p>
+                    <i class="bi bi-quote quote-icon-left"></i>
+                    <span>This place is fantastic! The servers were very attentive and also made sure I enjoyed everything. They answered every question I had about the food. The Yak chili was my favorite but I loved everything I've ever eaten there.</span>
+                    <i class="bi bi-quote quote-icon-right"></i>
+                  </p>
+                  <h3>Kevin Bacon</h3>
+                  <h4>American Actor</h4>
+                  <div class="stars">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-2 text-center">
+                <img src="{% static 'img/testimonials/testimonials-3.jpg' %}" class="img-fluid testimonial-img" alt="Kevin Bacon Testimonial">
+              </div>
+            </div>
+          </div>
+        </div><!-- End testimonial item -->
+
+        <div class="swiper-slide">
+          <div class="testimonial-item">
+            <div class="row gy-4 justify-content-center">
+              <div class="col-lg-6">
+                <div class="testimonial-content">
+                  <p>
+                    <i class="bi bi-quote quote-icon-left"></i>
+                    <span>I absolutely love this spot for desi food! The flavors are amazing, though the takeout portions could be a bit bigger. I highly recommend the biryani, mutton curry, and definitely don't miss out on the dumplings--they're a must-try!</span>
+                    <i class="bi bi-quote quote-icon-right"></i>
+                  </p>
+                  <h3>Nipun S.</h3>
+                  <h4>Local Guide</h4>
+                  <div class="stars">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-2 text-center">
+                <img src="{% static 'img/testimonials/testimonials-4.jpg' %}" class="img-fluid testimonial-img" alt="Nipun S. Testimonial">
+              </div>
+            </div>
+          </div>
+        </div><!-- End testimonial item -->
 
       </div>
+      <div class="swiper-pagination"></div>
+    </div>
 
-    </section><!-- /Testimonials Section -->
+  </div>
 
+</section><!-- /Testimonials Section -->
 
 
 
@@ -649,11 +641,9 @@
 
 
 <!-- Contact Section -->
-    <section id="contact" class="contact section">
+<section id="contact" class="contact section">
 
-
-
-        <!-- Add this for the popup message -->
+    <!-- Add this for the popup message -->
     <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -670,106 +660,103 @@
         </div>
     </div>
 
-      <div class="container" data-aos="fade-up" >
+    <div class="container" >
+        <!-- Section Title -->
+        <div class="container section-title" >
+            <h2>Contact</h2>
+            <p><span>Need Help?</span> <span class="description-title">Contact Us</span></p>
+        </div><!-- End Section Title -->
 
-
-
-          <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Contact</h2>
-        <p><span>Need Help?</span> <span class="description-title">Contact Us</span></p>
-      </div><!-- End Section Title -->
         <div class="mb-5">
-        <!-- Add this form after your info items div -->
-        <form id="contactForm" class="contact-form mt-4" data-aos="fade-up" data-aos-delay="10">
-            {% csrf_token %}
+            <!-- Add this form after your info items div -->
+            <form id="contactForm" class="contact-form mt-4" >
+                {% csrf_token %}
+                <div class="row gy-4">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="name" class="form-label">Your Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="email" class="form-label">Your Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="subject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="subject" name="subject" required>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="6" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 text-center">
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="mb-5">
             <div class="row gy-4">
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="name" class="form-label">Your Name</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
+                    <div class="info-item d-flex align-items-center" data-aos="fade-out" data-aos-delay="10">
+                        <i class="icon bi bi-geo-alt flex-shrink-0"></i>
+                        <div>
+                            <h3>Address</h3>
+                            <p>406 W Abram Street, Arlington, TX, United States</p>
+                        </div>
                     </div>
-                </div>
+                </div><!-- End Info Item -->
 
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="email" class="form-label">Your Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                    <div class="info-item d-flex align-items-center" data-aos="fade-up" data-aos-delay="300">
+                        <i class="icon bi bi-telephone flex-shrink-0"></i>
+                        <div>
+                            <h3>Call Us</h3>
+                            <p>+1 (682) 248-3844</p>
+                        </div>
                     </div>
-                </div>
+                </div><!-- End Info Item -->
 
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label for="subject" class="form-label">Subject</label>
-                        <input type="text" class="form-control" id="subject" name="subject" required>
+                <div class="col-md-6">
+                    <div class="info-item d-flex align-items-center" data-aos="fade-up" data-aos-delay="400">
+                        <i class="icon bi bi-envelope flex-shrink-0"></i>
+                        <div>
+                            <h3>Email Us</h3>
+                            <p>royalnepaltx2024@gmail.com</p>
+                        </div>
                     </div>
-                </div>
+                </div><!-- End Info Item -->
 
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label for="message" class="form-label">Message</label>
-                        <textarea class="form-control" id="message" name="message" rows="6" required></textarea>
+                <div class="col-md-6">
+                    <div class="info-item d-flex align-items-center" data-aos="fade-up" data-aos-delay="500">
+                        <i class="icon bi bi-clock flex-shrink-0"></i>
+                        <div>
+                            <h3>Opening Hours<br></h3>
+                            <p><strong>7 days a week:</strong> 12:00 PM - 9:30 PM</p>
+                        </div>
                     </div>
-                </div>
-
-                <div class="col-md-12 text-center">
-                    <button type="submit" class="btn btn-primary">Send Message</button>
-                </div>
+                </div><!-- End Info Item -->
             </div>
-        </form>
-      </div>
-            <div class="mb-5">
-          <div class="row gy-4">
-
-          <div class="col-md-6">
-            <div class="info-item d-flex align-items-center" data-aos="fade-out" data-aos-delay="10">
-              <i class="icon bi bi-geo-alt flex-shrink-0"></i>
-              <div>
-                <h3>Address</h3>
-                <p>A108 Adam Street, New York, NY 535022</p>
-              </div>
-            </div>
-          </div><!-- End Info Item -->
-
-          <div class="col-md-6">
-            <div class="info-item d-flex align-items-center" data-aos="fade-up" data-aos-delay="300">
-              <i class="icon bi bi-telephone flex-shrink-0"></i>
-              <div>
-                <h3>Call Us</h3>
-                <p>+1 5589 55488 55</p>
-              </div>
-            </div>
-          </div><!-- End Info Item -->
-
-          <div class="col-md-6">
-            <div class="info-item d-flex align-items-center" data-aos="fade-up" data-aos-delay="400">
-              <i class="icon bi bi-envelope flex-shrink-0"></i>
-              <div>
-                <h3>Email Us</h3>
-                <p>info@example.com</p>
-              </div>
-            </div>
-          </div><!-- End Info Item -->
-
-          <div class="col-md-6">
-            <div class="info-item d-flex align-items-center" data-aos="fade-up" data-aos-delay="500">
-              <i class="icon bi bi-clock flex-shrink-0"></i>
-              <div>
-                <h3>Opening Hours<br></h3>
-                <p><strong>Mon-Sat:</strong> 11AM - 23PM; <strong>Sunday:</strong> Closed</p>
-              </div>
-            </div>
-          </div><!-- End Info Item -->
-
         </div>
-            </div>
-          <div class="mb-5">
-          <iframe style="width: 100%; height: 400px;" src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d12097.433213460943!2d-74.0062269!3d40.7101282!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0xb89d1fe6bc499443!2sDowntown+Conference+Center!5e0!3m2!1smk!2sbg!4v1539943755621" frameborder="0" allowfullscreen=""></iframe>
+
+        <div class="mb-5">
+            <iframe style="width: 100%; height: 400px;" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3355.8101000583096!2d-97.11407912365059!3d32.73569667455591!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864e7c1a5872ae87%3A0xdfd3f23f2eafa384!2s406%20W%20Abram%20St%2C%20Arlington%2C%20TX%2076010!5e0!3m2!1sen!2sus!4v1708293286909!5m2!1sen!2sus" frameborder="0" allowfullscreen=""></iframe>
         </div><!-- End Google Maps -->
-      </div>
+    </div>
 
-    </section><!-- /Contact Section -->
-
+</section><!-- /Contact Section -->
 
 {% block extra_js %}
 <script>

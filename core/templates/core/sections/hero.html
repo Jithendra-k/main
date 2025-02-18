@@ -1,7 +1,7 @@
-<!-- core/templates/core/sections/hero.html -->
 {% load static %}
 
-<section id="hero" class="hero section light-background">
+<section id="hero" class="hero section">
+    <div class="hero-overlay"></div>  <!-- Add this for background overlay -->
     <div class="container">
         <div class="row gy-4 justify-content-center justify-content-lg-between">
             <div class="col-lg-5 order-2 order-lg-1 d-flex flex-column justify-content-center">
@@ -15,8 +15,108 @@
                 </div>
             </div>
             <div class="col-lg-5 order-1 order-lg-2 hero-img" data-aos="zoom-out">
-                <img src="{% static 'img/hero-img.png' %}" class="img-fluid animated" alt="">
+                <img src="{% static 'img/momo.jpg' %}" class="img-fluid animated" alt="">
             </div>
         </div>
     </div>
 </section>
+
+<style>
+.hero {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    background: url('{% static "img/hero-bg.JPG" %}') center center;
+    background-size: cover;
+    background-attachment: fixed;
+    padding: 120px 0;
+    overflow: hidden;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 1;
+}
+.img-fluid.animated {
+    border-radius: 90% !important;
+}
+
+.hero .container {
+    position: relative;
+    z-index: 2;
+}
+
+.hero h1 {
+    font-size: 56px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.hero p {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.btn-get-started {
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 1px;
+    display: inline-block;
+    padding: 12px 36px;
+    border-radius: 50px;
+    transition: 0.5s;
+    color: white;
+    background: #ce1212;  /* Changed to red */
+    box-shadow: 0 2px 5px rgba(206, 18, 18, 0.2);
+}
+
+.btn-get-started:hover {
+    background: #b01010;  /* Darker red on hover */
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-watch-video {
+    font-size: 16px;
+    transition: 0.5s;
+    margin-left: 25px;
+    color: #333;
+    font-weight: 600;
+}
+
+.btn-watch-video i {
+    color: #ce1212;  /* Changed to red */
+    font-size: 32px;
+    transition: 0.3s;
+    line-height: 0;
+    margin-right: 8px;
+}
+
+.btn-watch-video:hover {
+    color: #ce1212;  /* Changed to red */
+}
+
+.btn-watch-video:hover i {
+    color: #b01010;  /* Darker red on hover */
+}
+
+@media (max-width: 640px) {
+    .hero h1 {
+        font-size: 36px;
+    }
+    .hero {
+        text-align: center;
+        padding: 60px 0;
+    }
+    .btn-get-started,
+    .btn-watch-video {
+        font-size: 13px;
+    }
+}
+</style>
